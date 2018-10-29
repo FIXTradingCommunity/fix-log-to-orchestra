@@ -1,7 +1,11 @@
-﻿export class OrchestraFile {
+﻿import OrchestraModel from "./orchestra_model";
+
+export default class OrchestraFile {
+    static readonly MIME_TYPE: string = "application/xml";
+
     private file: File;
     private document: Document = new Document();
-    static readonly MIME_TYPE: string = "application/xml";
+    private orchestraModel: OrchestraModel = new OrchestraModel();
 
     constructor(file: File) {
         this.file = file;
@@ -38,6 +42,7 @@
             } else {
                 this.dom = OrchestraFile.parse(res.toString());
             }
+            this.extractOrchestraModel();
         }
         reader.onerror = function () {
             alert(reader.error.message);
@@ -48,6 +53,21 @@
 
     contents(): Blob {
         return new Blob([OrchestraFile.serialize(this.document)], { type: OrchestraFile.MIME_TYPE })
+    }
+
+    private extractOrchestraModel() {
+        this.extractFieldModel();
+    }
+
+    private extractFieldModel(): void {
+        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields/fixr:field", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+        let element: Element = iterator.iterateNext() as Element;
+        while (element) {
+            let id: string = element.getAttribute("id");
+            let type: string = element.getAttribute("type");
+        }
     }
 }
 

@@ -10,8 +10,8 @@ export interface IteratorResult<T> {
 export class TagValueFileParser implements Iterator<MessageParser> {
     static readonly encoding: string = "US-ASCII";
     static readonly messageStartDelimiter: string = "8=FIX";
-    static readonly messageEndPattern: string = "10=\\d+\1";
-    static readonly fieldDelimiter: string = '\1';
+    static readonly messageEndPattern: string = "10=\\d+\\1";
+    static readonly fieldDelimiter: string = String.fromCharCode(1);
 
     private file: File;
     private str: string;
@@ -105,7 +105,7 @@ export class MessageParser implements Iterator<FieldParser> {
 
 export class FieldParser {
     static readonly tagDelimiter: string = "=";
-    static readonly fieldDelimiter: string = '\1';
+    static readonly fieldDelimiter: string = String.fromCharCode(1);
 
     private str: string;
     private tagOffset: number;

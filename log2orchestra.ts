@@ -1,5 +1,5 @@
-﻿import { OrchestraFile } from "./orchestra_file";
-import { TagValueFileParser, MessageParser, FieldParser, IteratorResult } from "./tag_value_parser";
+﻿import OrchestraFile from "./orchestra_file";
+import LogReader from "./log_reader";
 
 var referenceFile: File;
 var logFile: File;
@@ -27,23 +27,8 @@ var createOrchestra = function (event) {
         let input = new OrchestraFile(referenceFile);
         input.readFile();
 
-        let logParser: TagValueFileParser = new TagValueFileParser(logFile);
-        logParser.readFile();
-        let messageResult: IteratorResult<MessageParser> = logParser.next();
-        while (!messageResult.done) {
-            let message: MessageParser = messageResult.value;
-
-            let fieldResult: IteratorResult<FieldParser> = message.next();
-            while (!fieldResult.done) {
-                let field: FieldParser = fieldResult.value;
-                let tag = field.tag;
-                let value  = field.value;
-
-                fieldResult = message.next();
-            }
-
-            messageResult = logParser.next();
-        }
+        let logReader: LogReader = new LogReader(logFile);
+        logReader.readFile();
 
         let output = new OrchestraFile(new File([""], orchestraFileName));
         // shortcut for testing
@@ -113,4 +98,3 @@ var createLink = function (contents: Blob) {
         }, 1500);
     };
 }
-

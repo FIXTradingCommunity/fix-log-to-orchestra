@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
 	<title>FIX Log to Orchestra</title>
     <link rel="stylesheet" href="orchestra.css" type="text/css" />
-    <script src="app.js"></script>
+    <script src="log2orchestra.js"></script>
 </head>
 <body>
 	<h1>FIX Log to Orchestra</h1>
@@ -21,7 +21,7 @@
 		</div>
 		<div class="field">
 			<label for="outputFile">Orchestra file to create</label><br />
-			<input type="text" id="outputFile" placeholder="Orchestra file name" onchange="outputOrchestra(event)">
+			<input type="text" id="outputFile" value ="myorchestra.xml" placeholder="Orchestra file name" onchange="outputOrchestra(event)">
 		</div>
 		<button type="button" id="createButton" onclick="createOrchestra(event)">Create Orchestra file</button><output id="output"></output>
 	</div>
