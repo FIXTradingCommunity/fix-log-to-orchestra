@@ -2,10 +2,10 @@
 
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
+	<meta charset="utf-8" />
 	<title>FIX Log to Orchestra</title>
-    <link rel="stylesheet" href="orchestra.css" type="text/css" />
-    <script src="log2orchestra.js"></script>
+	<link rel="stylesheet" href="orchestra.css" type="text/css" />
+	<script src="app.js"></script>
 </head>
 <body>
 	<h1>FIX Log to Orchestra</h1>
@@ -14,14 +14,23 @@
 		<div class="field">
 			<label for="inputFile">Reference Orchestra file</label><br />
 			<input type="file" id="inputFile" accept=".xml" onchange="inputOrchestra(event)">
+			<div class="bar">
+				<div id="inputFileBar" class="progressBar"></div>
+			</div>
 		</div>
 		<div class="field">
-			<label for="logFile">FIX tag-value log file</label><br />
-			<input type="file" id="logFile" onchange="inputLog(event)">
+			<label for="logFile">FIX tag-value log files</label><br />
+			<input type="file" id="logFile" multiple="multiple" onchange="inputLogs(event)">
+			<div class="bar">
+				<div id="logFileBar" class="progressBar"></div>
+			</div>
 		</div>
 		<div class="field">
 			<label for="outputFile">Orchestra file to create</label><br />
-			<input type="text" id="outputFile" value ="myorchestra.xml" placeholder="Orchestra file name" onchange="outputOrchestra(event)">
+			<input type="text" id="outputFile" value="myorchestra.xml" placeholder="Orchestra file name" onchange="outputOrchestra(event)">
+			<div class="bar">
+				<div id="outputFileBar" class="progressBar"></div>
+			</div>
 		</div>
 		<button type="button" id="createButton" onclick="createOrchestra(event)">Create Orchestra file</button><output id="output"></output>
 	</div>

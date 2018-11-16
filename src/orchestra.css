@@ -14,6 +14,7 @@ label {
 input {
     margin-top: 2px;
     margin-bottom: 2px;
+    min-width: 200px;
 }
 
 button {
@@ -70,6 +71,24 @@ a {
 
 .field {
     border: none;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.bar {
+    width: 200px;
+    background-color: lightgrey;
+    visibility: hidden;
+}
+
+.progressBar {
+    width: 1%;
+    height: 20px;
+    background-color: green;
+    text-align: right;
+    vertical-align: middle;
+    font-family: sans-serif;
+    font-size: smaller;
+    font-weight: bold;
+    color: white;
 }
