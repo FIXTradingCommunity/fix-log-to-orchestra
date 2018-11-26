@@ -181,6 +181,35 @@ namespace IsSupported {
     }
 }
 
+enum Presence {
+    Optional = "optional",
+    Required = "required",
+    Forbidden = "forbidden",
+    Ignored = "ignored",
+    Constant = "constant"
+}
+
+namespace Presence {
+    /**
+     * Reverse mapping for Presence enum
+     * @param str string value from DOM
+    */
+    export function stringToPresence(str: string): Presence {
+        switch (str) {
+            case "required":
+                return Presence.Required;
+            case "forbidden":
+                return Presence.Forbidden;
+            case "ignored":
+                return Presence.Ignored;
+            case "constant":
+                return Presence.Constant;
+            default:
+                return Presence.Optional;
+        }
+    }
+}
+
 class OrchestraFile {
     static readonly MIME_TYPE: string = "application/xml";
 
@@ -261,20 +290,83 @@ class OrchestraFile {
 
     updateDomFromModel(logModel: LogModel, progressNode: HTMLElement): void {
         this.updateDomMetadata();
+        this.updateDomCodes(logModel.model.codesets);
+        this.updateDomFields(logModel.model.fields);
+        this.addDomMessages(logModel.model.messages);
+        this.addDomComponents(logModel.model.components);
+        this.addDomGroups(logModel.model.groups);
         this.removeUnusedMessages(logModel.model.messages);
-        showProgress(progressNode, 10);
         this.removeUnusedMessageMembers(logModel.model.messages);
         this.removeUnusedComponentMembers(logModel.model.components);
-        showProgress(progressNode, 20);
         this.removeUnusedGroupMembers(logModel.model.groups);
         this.removeUnusedComponents(logModel.model.components);
-        showProgress(progressNode, 30);
         this.removeUnusedGroups(logModel.model.groups);
-        showProgress(progressNode, 40);
-        this.updateDomCodes(logModel.model.codesets);
-        showProgress(progressNode, 50);
-        this.updateDomFields(logModel.model.fields);
-        showProgress(progressNode, 100);
+        showProgress(progressNode, 100); 
+    }
+
+    private addDomMessages(messages: MessagesModel): void {
+        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        let messagesElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+
+        Array.from(messages.values()).filter(m => m.uses > 0).forEach((message: MessageModel) => {
+
+            if (message.scenario === MessageModel.defaultScenario) {
+                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message[@name='" + message.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
+                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            } else {
+                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message[@name='" + message.name + "' and @scenario= '" + message.scenario + "']",
+                    this.dom, namespaceResolver,
+                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            }
+            let messageElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+            if (!messageElement) {
+                messageElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:message");
+                messageElement.setAttribute("name", message.name);
+                messageElement.setAttribute("scenario", message.scenario);
+                messageElement.setAttribute("id", message.id);
+                messageElement.setAttribute("msgType", message.msgType);
+                messagesElement.appendChild(messageElement);
+                let structureElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:structure");
+                messageElement.appendChild(structureElement);
+                this.addMembers(structureElement, message);
+            }
+        });
+    }
+
+    private addMembers(structureElement: Element, structure: StructureModel) {
+
+        structure.members.forEach(m => {
+            if (m instanceof FieldRef) {
+                let memberElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:fieldRef");
+                memberElement.setAttribute("id", m.id);
+                memberElement.setAttribute("presence", m.presence.toString());
+                if (m.value) {
+                    memberElement.setAttribute("value", m.value);
+                }
+                if (m.field && (m.field.scenario != FieldRef.defaultScenario)) {
+                    memberElement.setAttribute("scenario", m.field.scenario);
+                }
+                structureElement.appendChild(memberElement);
+            } else if (m instanceof ComponentRef) {
+                let memberElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:componentRef");
+                memberElement.setAttribute("id", m.id);
+                memberElement.setAttribute("presence", m.presence.toString());
+                if (m.scenario != FieldRef.defaultScenario) {
+                    memberElement.setAttribute("scenario", m.scenario);
+                }
+                structureElement.appendChild(memberElement);
+            } else if (m instanceof GroupRef) {
+                let memberElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:groupRef");
+                memberElement.setAttribute("id", m.id);
+                memberElement.setAttribute("presence", m.presence.toString());
+                if (m.scenario != FieldRef.defaultScenario) {
+                    memberElement.setAttribute("scenario", m.scenario);
+                }
+                structureElement.appendChild(memberElement);
+            }
+        });
     }
 
     private updateDomMetadata(): void {
@@ -282,17 +374,17 @@ class OrchestraFile {
         let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:metadata", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         let metadataElement: Element = nodesSnapshot.snapshotItem(0) as Element;
-        let contributorElement: Element = this.dom.createElement("dc:contributor");
+        let contributorElement: Element = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:contributor");
         let textNode: Text = this.dom.createTextNode("log2orchestra");
         contributorElement.appendChild(textNode);
         metadataElement.appendChild(contributorElement);
 
         let timestamp: string = new Date().toISOString();
-        let dateElement: Element = metadataElement.getElementsByTagName("dc:date")[0];
+        let dateElement: Element = metadataElement.getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date")[0];
         if (dateElement) {
             dateElement.childNodes[0].nodeValue = timestamp;
         } else {
-            dateElement = this.dom.createElement("dc:date");
+            dateElement = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:date");
             let timeText: Text = this.dom.createTextNode(timestamp);
             dateElement.appendChild(timeText);
             metadataElement.appendChild(dateElement);
@@ -346,10 +438,11 @@ class OrchestraFile {
             while (childElement) {
                 let elementName: string = childElement.localName;
                 if (elementName === "code") {
+                    let id: string = childElement.getAttribute("id");
                     let name: string = childElement.getAttribute("name");
                     let value: string = childElement.getAttribute("value");
                     supported = childElement.getAttribute("supported");
-                    let code: CodeModel = new CodeModel(name, value, IsSupported.stringToSupported(supported));
+                    let code: CodeModel = new CodeModel(id, name, value, IsSupported.stringToSupported(supported));
                     codeset.add(code);
                 }
                 childElement = childElement.nextElementSibling;
@@ -372,7 +465,7 @@ class OrchestraFile {
                 let componentModel = new ComponentModel(id, name, scenario);
                 componentsModel.add(componentModel);
                 let memberElement: Element = componentElement.firstElementChild;
-                this.addMembers(memberElement, componentModel);
+                this.extractStructureMembers(memberElement, componentModel);
             }
             componentElement = iterator.iterateNext() as Element;
         }
@@ -396,7 +489,7 @@ class OrchestraFile {
                     let groupModel = new GroupModel(id, name, numInGroupId, scenario);
                     groupsModel.add(groupModel);
                     memberElement = memberElement.nextElementSibling
-                    this.addMembers(memberElement, groupModel);
+                    this.extractStructureMembers(memberElement, groupModel);
                 }
             }
             groupElement = iterator.iterateNext() as Element;
@@ -420,7 +513,7 @@ class OrchestraFile {
                 let structureElement = messageElement.firstElementChild;
                 elementName = structureElement.localName;
                 if (elementName === "structure") {
-                    this.addMembers(structureElement.firstElementChild, messageModel);
+                    this.extractStructureMembers(structureElement.firstElementChild, messageModel);
                 }
             }
             messageElement = iterator.iterateNext() as Element;
@@ -438,7 +531,7 @@ class OrchestraFile {
             if (elementName === "message") {
                 let name: string = messageElement.getAttribute("name");
                 let scenario: string = messageElement.getAttribute("scenario") || "base";
-                let key: string = name + "." + scenario;
+                let key: string = MessageModel.key(name, scenario);
                 let messageModel: MessageModel = messagesModel.get(key);
                 if (!messageModel || messageModel.uses === 0) {
                     elementsToRemove.push(messageElement);
@@ -463,38 +556,38 @@ class OrchestraFile {
             if (elementName === "message") {
                 let messageName: string = messageElement.getAttribute("name");
                 let scenario: string = messageElement.getAttribute("scenario") || "base";
-                let key: string = messageName + "." + scenario;
+                let key: string = MessageModel.key(messageName, scenario);
                 let messageModel: MessageModel = messagesModel.get(key);
                 let structureElement: Element = messageElement.firstElementChild;
                 let childElement: Element = structureElement.firstElementChild;
                 while (childElement) {
                     elementName = childElement.localName;
-                    switch (elementName) {
-                        case "fieldRef":
+                        switch (elementName) {
+                            case "fieldRef":
                             let id: string = childElement.getAttribute("id");
-                            let fieldContext: FieldContext = messageModel.findFieldRef(id);
-                            if (fieldContext[0].uses === 0) {
+                                let fieldContext: FieldContext = messageModel.findFieldRef(id);
+                                if (fieldContext[0].uses === 0) {
                                 elementsToRemove.push(childElement);
-                            }
-                            break;
-                        case "componentRef":
+                                }
+                                break;
+                            case "componentRef":
                             let componentId: string = childElement.getAttribute("id");
-                            let componentRef: ComponentRef = messageModel.findComponentRef(componentId);
-                            if (componentRef.uses === 0) {
+                                let componentRef: ComponentRef = messageModel.findComponentRef(componentId);
+                                if (componentRef.uses === 0) {
                                 elementsToRemove.push(childElement);
-                            }
-                            break;
-                        case "groupRef":
+                                }
+                                break;
+                            case "groupRef":
                             let groupId: string = childElement.getAttribute("id");
-                            let groupRef: GroupRef = messageModel.findGroupRef(groupId);
-                            if (groupRef.uses === 0) {
+                                let groupRef: GroupRef = messageModel.findGroupRef(groupId);
+                                if (groupRef.uses === 0) {
                                 elementsToRemove.push(childElement);
-                            }
-                            break;
-                    }
+                                }
+                                break;
+                        }
                     childElement = childElement.nextElementSibling;
+                    }
                 }
-            }
             messageElement = iterator.iterateNext() as Element;
         }
         for (let element of elementsToRemove) {
@@ -523,7 +616,7 @@ class OrchestraFile {
             }
             let codesetElement: Element = nodesSnapshot.snapshotItem(0) as Element;
             if (!codesetElement) {
-                codesetElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "codeSet");
+                codesetElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:codeSet");
                 codesetElement.setAttribute("name", codeset.name);
                 codesetElement.setAttribute("scenario", codeset.scenario);
                 codesetElement.setAttribute("id", codeset.id);
@@ -559,7 +652,7 @@ class OrchestraFile {
             let notFoundInDom: Array<string> = usedCodeValues.filter(x => domCodeValues.indexOf(x) < 0);
             notFoundInDom.forEach((value: string) => {
                 let code: CodeModel = codeset.getByValue(value);
-                let codeElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "code");
+                let codeElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:code");
                 codeElement.setAttribute("name", code.name);
                 codeElement.setAttribute("value", code.value);
                 codeElement.setAttribute("supported", "supported");
@@ -588,7 +681,7 @@ class OrchestraFile {
             }
             let fieldElement: Element = nodesSnapshot.snapshotItem(0) as Element;
             if (!fieldElement) {
-                fieldElement = this.dom.createElement("fixr:field");
+                fieldElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:field");
                 fieldElement.setAttribute("name", field.name);
                 fieldElement.setAttribute("scenario", field.scenario);
                 fieldElement.setAttribute("id", field.id);
@@ -602,8 +695,76 @@ class OrchestraFile {
                 fieldElement.setAttribute("supported", "ignored");
             }
         });
-
     }
+
+    private addDomComponents(componentsModel: ComponentsModel): void {
+        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        let componentsElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+
+        componentsModel.forEach((component: ComponentModel) => {
+
+            if (component.scenario === FieldModel.defaultScenario) {
+                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component[@name='" + component.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
+                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            } else {
+                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component[@name='" + component.name + "' and @scenario= '" + component.scenario + "']",
+                    this.dom, namespaceResolver,
+                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            }
+            let componentElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+            if (!componentElement) {
+                componentElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:component");
+                componentElement.setAttribute("name", component.name);
+                componentElement.setAttribute("scenario", component.scenario);
+                componentElement.setAttribute("id", component.id);
+                componentsElement.appendChild(componentElement);
+                this.addMembers(componentElement, component);
+            }
+
+            if (component.uses > 0) {
+                componentElement.setAttribute("supported", "supported");
+            } else {
+                componentElement.setAttribute("supported", "ignored");
+            }
+        });
+    }
+
+    private addDomGroups(groupsModel: GroupsModel): void {
+        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        let componentsElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+
+        groupsModel.forEach((group: GroupModel) => {
+
+            if (group.scenario === FieldModel.defaultScenario) {
+                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group[@name='" + group.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
+                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            } else {
+                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group[@name='" + group.name + "' and @scenario= '" + group.scenario + "']",
+                    this.dom, namespaceResolver,
+                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            }
+            let groupElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+            if (!groupElement) {
+                groupElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:group");
+                groupElement.setAttribute("name", group.name);
+                groupElement.setAttribute("scenario", group.scenario);
+                groupElement.setAttribute("id", group.id);
+                componentsElement.appendChild(groupElement);
+                this.addMembers(groupElement, group);
+            }
+
+            if (group.uses > 0) {
+                groupElement.setAttribute("supported", "supported");
+            } else {
+                groupElement.setAttribute("supported", "ignored");
+            }
+        });
+    }
+
 
     private removeUnusedComponentMembers(componentsModel: ComponentsModel): void {
         let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
@@ -616,7 +777,7 @@ class OrchestraFile {
             if (elementName === "component") {
                 let componentName: string = componentElement.getAttribute("name");
                 let scenario: string = componentElement.getAttribute("scenario") || "base";
-                let key: string = componentName + "." + scenario;
+                let key: string = ComponentModel.key(componentName, scenario);
                 let componentModel: ComponentModel = componentsModel.get(key);
                 let childElement: Element = componentElement.firstElementChild;
                 while (childElement) {
@@ -665,9 +826,9 @@ class OrchestraFile {
         while (componentElement) {
             let elementName: string = componentElement.localName;
             if (elementName === "group") {
-                let componentName: string = componentElement.getAttribute("name");
+                let groupName: string = componentElement.getAttribute("name");
                 let scenario: string = componentElement.getAttribute("scenario") || "base";
-                let key: string = componentName + "." + scenario;
+                let key: string = GroupModel.key(groupName, scenario);
                 let groupModel: GroupModel = groupsModel.get(key);
                 let childElement: Element = componentElement.firstElementChild;
                 while (childElement) {
@@ -717,7 +878,7 @@ class OrchestraFile {
             if (elementName === "component") {
                 let name: string = componentElement.getAttribute("name");
                 let scenario: string = componentElement.getAttribute("scenario") || "base";
-                let key: string = name + "." + scenario;
+                let key: string = ComponentModel.key(name, scenario);
                 let componentModel: ComponentModel = componentsModel.get(key);
                 if (!componentModel || componentModel.uses === 0) {
                     elementsToRemove.push(componentElement);
@@ -742,7 +903,7 @@ class OrchestraFile {
             if (elementName === "group") {
                 let name: string = groupElement.getAttribute("name");
                 let scenario: string = groupElement.getAttribute("scenario") || "base";
-                let key: string = name + "." + scenario;
+                let key: string = GroupModel.key(name, scenario);
                 let groupModel: GroupModel = groups.get(key);
                 if (!groupModel || groupModel.uses === 0) {
                     elementsToRemove.push(groupElement);
@@ -756,21 +917,33 @@ class OrchestraFile {
         }
     }
 
-    private addMembers(memberElement: Element, structuralModel: StructureModel): void {
+    private extractStructureMembers(memberElement: Element, structuralModel: StructureModel): void {
         while (memberElement) {
             let elementName: string = memberElement.localName;
             let memberId: string = memberElement.getAttribute("id");
+            let presenceStr: string = memberElement.getAttribute("presence");
+            let presence: Presence = Presence.stringToPresence(presenceStr);
             switch (elementName) {
                 case "fieldRef":
-                    let fieldRef: FieldRef = new FieldRef(memberId, undefined, undefined);
+                    let fieldRef: FieldRef = new FieldRef(memberId, structuralModel.scenario, presence);
+                    if (presence === Presence.Constant) {
+                        let value: string = memberElement.getAttribute("value");
+                        fieldRef.value = value;
+                    } else {
+                        let assignElement: Element = memberElement.getElementsByTagName("fixr:assign")[0];
+                        if (assignElement) {
+                            let assignExpression: string = assignElement.childNodes[0].nodeValue;
+                            fieldRef.value = assignExpression;
+                        }
+                    }
                     structuralModel.addMember(fieldRef);
                     break;
                 case "componentRef":
-                    let componentRef: ComponentRef = new ComponentRef(memberId, structuralModel.scenario);
+                    let componentRef: ComponentRef = new ComponentRef(memberId, structuralModel.scenario, presence);
                     structuralModel.addMember(componentRef);
                     break;
                 case "groupRef":
-                    let groupRef: GroupRef = new GroupRef(memberId, structuralModel.scenario);
+                    let groupRef: GroupRef = new GroupRef(memberId, structuralModel.scenario, presence);
                     structuralModel.addMember(groupRef);
                     break;
             }
@@ -788,11 +961,11 @@ class FieldModel implements Keyed, Usable {
     readonly datatype: string;
     readonly scenario: string;
 
-    constructor(id: string, name: string, type: string, scenario: string, public uses = 0) {
+    constructor(id: string, name: string, datatype: string, scenario: string, public uses = 0) {
         this.id = id;
         this.name = name;
-        if (type) {
-            this.datatype = type;
+        if (datatype) {
+            this.datatype = datatype;
         } else {
             this.datatype = FieldModel.defaultDatatype;
         }
@@ -803,8 +976,22 @@ class FieldModel implements Keyed, Usable {
         }
     }
 
+    static key(name: string, scenario: string): string {
+        return name + "." + scenario;
+    }
+
     key(): string {
-        return this.name + "." + this.scenario;
+        return FieldModel.key(this.name, this.scenario);
+    }
+
+    /**
+   * Make a copy of this FieldModel for a different scenario, but with uses set to zero
+   * @param scenario scenario name
+   * @returns a new FieldModel
+   */
+    clone(scenario: string): FieldModel {
+        let clone = new FieldModel(this.id, this.name, this.datatype, scenario);
+        return clone;
     }
 
     use() {
@@ -823,12 +1010,17 @@ class FieldsModel extends Map<string, FieldModel> {
     }
 
     add(field: FieldModel): this {
-        this.fieldIdMap.set(field.id, field);
+        this.fieldIdMap.set(FieldRef.key(field.id, field.scenario), field);
         return this.set(field.key(), field);
     }
 
-    getById(id: string): FieldModel {
-        return this.fieldIdMap.get(id);
+    /**
+     * Retrieve a Field based on the key of a FieldRef
+     * @param id field tag
+     * @param scenario scenario name
+     */
+    getById(id: string, scenario: string): FieldModel {
+        return this.fieldIdMap.get(FieldRef.key(id, scenario));
     }
 
     getIds(): Array<string> {
@@ -845,14 +1037,48 @@ class FieldsModel extends Map<string, FieldModel> {
 }
 
 class CodeModel implements Usable {
+
+    /**
+     * Orchestra DSL prefix for code name
+     */
+    static readonly codeNamePrefix: string = "^";
+
+    /**
+     * Search pattern for named code value with Orchestra DSL prefix
+     */
+    static readonly codeNamePattern: RegExp = new RegExp("/\^(\S*)/");
+
+    /**
+     * Returns a code name without DSL prefix or null if no code name is found
+     * @param expression a DSL expression to parse
+     */
+    static getCodeNameFromExpression(expression: string): string {
+        return CodeModel.codeNamePattern.exec(expression)[1];
+    }
+
+    readonly id: string;
     readonly name: string;
     readonly value: string;
     private isSupported: IsSupported;
 
-    constructor(name: string, value: string, supported: IsSupported, public uses = 0) {
+    constructor(id: string, name: string, value: string, supported: IsSupported, public uses = 0) {
+        if (id) {
+            this.id = id;
+        } else {
+            this.id = (Math.floor(Math.random() * 1000) + 5000).toString();
+        }
         this.name = name;
         this.value = value;
         this.supported = supported;
+    }
+
+    /**
+   * Make a copy of this CodeModel for a different scenario, but with uses set to 0
+   * @returns a new CodeModel
+   */
+    clone(): CodeModel {
+        let clone = new CodeModel(this.id, this.name, this.value, this.isSupported);
+        return clone;
     }
 
     use() {
@@ -877,19 +1103,39 @@ abstract class StructureMember implements Keyed, Usable {
 
     readonly id: string;
     readonly scenario: string;
+    readonly presence: Presence;
     private parentStructure: StructureModel;
 
-    constructor(id: string, scenario: string, public supported: IsSupported = IsSupported.Supported, public uses = 0) {
-        this.id = id;
+    constructor(id: string, scenario: string, presence: Presence, public supported: IsSupported = IsSupported.Supported, public uses = 0) {
+        if (id) {
+            this.id = id;
+        } else {
+            this.id = (Math.floor(Math.random() * 1000) + 5000).toString();
+        }
         if (scenario) {
             this.scenario = scenario;
         } else {
             this.scenario = StructureMember.defaultScenario;
         }
+        if (presence) {
+            this.presence = presence;
+        } else {
+            this.presence = Presence.Optional;
+        }
     }
 
+    static key(id: string, scenario: string): string {
+        return id + "." + scenario;
+    }
+
+    /**
+     * Copy this member for a different scenario, with uses set to zero
+     * @param scenario new scenario
+     */
+    abstract clone(scenario: string): StructureMember;
+
     key(): string {
-        return this.id + "." + this.scenario;
+        return StructureMember.key(this.id, this.scenario);
     }
 
     get parent(): StructureModel {
@@ -922,7 +1168,11 @@ abstract class StructureModel implements Keyed, Usable {
     readonly members = new Array<StructureMember>();
 
     constructor(id: string, name: string, scenario: string, public supported: IsSupported = IsSupported.Supported, public uses = 0) {
-        this.id = id;
+        if (id) {
+            this.id = id;
+        } else {
+            this.id = (Math.floor(Math.random() * 1000) + 5000).toString();
+        }
         this.name = name;
         if (scenario) {
             this.scenario = scenario;
@@ -931,9 +1181,22 @@ abstract class StructureModel implements Keyed, Usable {
         }
     }
 
-    key(): string {
-        return this.name + "." + this.scenario;
+    /**
+     * Key combines the name and scenario of this object
+     */
+    static key(name: string, scenario: string): string {
+        return name + "." + scenario;
     }
+
+    key(): string {
+        return StructureModel.key(this.name, this.scenario);
+    }
+
+    /**
+     * Copy this member for a different scenario, with uses set to zero
+     * @param scenario new scenario
+     */
+    abstract clone(scenario: string): StructureModel;
 
     addMember(member: StructureMember): void {
         this.members.push(member);
@@ -947,7 +1210,7 @@ abstract class StructureModel implements Keyed, Usable {
      */
     findComponentRef(id: string): ComponentRef {
         for (const member of this.members) {
-            if (member.id == id && member instanceof ComponentRef) {
+            if (member.id === id && member instanceof ComponentRef) {
                 return member;
             }
         }
@@ -961,7 +1224,7 @@ abstract class StructureModel implements Keyed, Usable {
      */
     findGroupRef(id: string): GroupRef {
         for (const member of this.members) {
-            if (member.id == id && member instanceof GroupRef) {
+            if (member.id === id && member instanceof GroupRef) {
                 return member;
             }
         }
@@ -976,17 +1239,17 @@ abstract class StructureModel implements Keyed, Usable {
      */
     findFieldRef(id: string): FieldContext | undefined {
         for (const member of this.members) {
-            if (member.id == id && member instanceof FieldRef) {
+            if (member.id === id && member instanceof FieldRef) {
                 let fieldContext: FieldContext = [member, this, undefined];
                 return fieldContext;
             } else if (member instanceof ComponentRef) {
                 let fieldContext: FieldContext = member.findFieldRef(id);
-                if (fieldContext[0]) {
+                if (fieldContext && fieldContext[0]) {
                     return fieldContext;
                 }
             } else if (member instanceof GroupRef) {
                 let fieldContext: FieldContext = member.findFieldRef(id);
-                if (fieldContext[0]) {
+                if (fieldContext && fieldContext[0]) {
                     return fieldContext;
                 }
             }
@@ -999,12 +1262,20 @@ abstract class StructureModel implements Keyed, Usable {
     }
 }
 
+/**
+ * Maps a StructureModel key to a StructureModel
+ */
 class StructureModelMap<T extends StructureModel> extends Map<string, T> {
 
     constructor() {
         super();
     }
 
+    /**
+     * Add an entry into this map with its natural key
+     * @param sm a member to add to this map
+     * @see StructureModel.key()
+     */
     add(sm: T): this {
         return this.set(sm.key(), sm);
     }
@@ -1014,9 +1285,15 @@ class StructureModelMap<T extends StructureModel> extends Map<string, T> {
 class FieldRef extends StructureMember {
     private fieldModel: FieldModel;
     private codesetModel: CodesetModel;
+    private assignedValue: string;
 
-    constructor(id: string, scenario: string, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
-        super(id, scenario, supported, uses);
+    constructor(id: string, scenario: string, presence: Presence, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
+        super(id, scenario, presence, supported, uses);
+    }
+
+    clone(scenario: string): FieldRef {
+        let clone = new FieldRef(this.id, scenario, this.presence);
+        return clone;
     }
 
     get field(): FieldModel {
@@ -1035,6 +1312,14 @@ class FieldRef extends StructureMember {
         this.codesetModel = codesetModel;
     }
 
+    get value(): string {
+        return this.assignedValue;
+    }
+
+    set value(assignedValue: string) {
+        this.assignedValue = assignedValue;
+    }
+
     use(): void {
         super.use();
         if (this.field) {
@@ -1045,12 +1330,32 @@ class FieldRef extends StructureMember {
 }
 
 class ComponentRef extends StructureMember {
+    static readonly standardHeaderId = "1024";
+    static readonly standardTrailerId = "1025";
+
     static componentsModel: ComponentsModel;
 
     private componentModel: ComponentModel;
 
-    constructor(id: string, scenario: string, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
-        super(id, scenario, supported, uses);
+    constructor(id: string, scenario: string, presence: Presence = Presence.Optional, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
+        super(id, scenario, presence, supported, uses);
+    }
+
+    clone(scenario: string): ComponentRef {
+        // special case: do not change scenario of standard header or trailer
+        if (this.id === ComponentModel.standardHeaderId || this.id === ComponentModel.standardTrailerId) {
+            let clone = new ComponentRef(this.id, ComponentModel.defaultScenario, this.presence);
+            return clone;
+        } else {
+            let clone = new ComponentRef(this.id, scenario, this.presence);
+            let component: ComponentModel = ComponentRef.componentsModel.getById(this.id, scenario);
+            if (!component) {
+                let defaultComponent: ComponentModel = ComponentRef.componentsModel.getById(this.id, ComponentModel.defaultScenario);
+                component = defaultComponent.clone(scenario);
+                ComponentRef.componentsModel.add(component);
+            }
+            return clone;
+        }
     }
 
     findFieldRef(fieldId: string): FieldContext | undefined {
@@ -1061,7 +1366,7 @@ class ComponentRef extends StructureMember {
             }
         }
         let context: FieldContext = this.componentModel.findFieldRef(fieldId);
-        if (!context[2]) {
+        if (context[0] && !context[2]) {
             context[2] = this;
         }
         return context;
@@ -1073,8 +1378,21 @@ class GroupRef extends StructureMember {
 
     private groupModel: GroupModel;
 
-    constructor(id: string, scenario: string, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
-        super(id, scenario, supported, uses);
+    constructor(id: string, scenario: string, presence: Presence = Presence.Optional, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
+        super(id, scenario, presence, supported, uses);
+    }
+
+    clone(scenario: string): GroupRef {
+        let clone = new GroupRef(this.id, scenario, this.presence);
+        let group: GroupModel = GroupRef.groupsModel.getById(this.id, scenario);
+        if (!group) {
+            let defaultGroup: GroupModel = GroupRef.groupsModel.getById(this.id, ComponentModel.defaultScenario);
+            if (defaultGroup) {
+                group = defaultGroup.clone(scenario);
+                GroupRef.groupsModel.add(group);
+            }
+        }
+        return clone;
     }
 
     findFieldRef(fieldId: string): FieldContext {
@@ -1086,7 +1404,7 @@ class GroupRef extends StructureMember {
         }
 
         let context: FieldContext = this.groupModel.findFieldRef(fieldId);
-        if (!context[2]) {
+        if (context[0] && !context[2]) {
             context[2] = this;
         }
         return context;
@@ -1095,8 +1413,22 @@ class GroupRef extends StructureMember {
 
 
 class ComponentModel extends StructureModel {
+    static readonly standardHeaderId = "1024";
+    static readonly standardTrailerId = "1025";
+
     constructor(id: string, name: string, scenario: string, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
         super(id, name, scenario, supported, uses);
+    }
+
+    clone(scenario: string): ComponentModel {
+        // special case: do not clone standard header or trailer
+        if (this.id === ComponentModel.standardHeaderId || this.id === ComponentModel.standardTrailerId) {
+            return this;
+        } else {
+            let clone = new ComponentModel(this.id, this.name, scenario);
+            this.members.forEach(m => clone.addMember(m.clone(scenario)));
+            return clone;
+        }
     }
 }
 
@@ -1114,7 +1446,7 @@ class ComponentsModel extends StructureModelMap<ComponentModel> {
     }
 
     getById(id: string, scenario: string): ComponentModel {
-        let key: string = id + "." + scenario;
+        let key: string = ComponentModel.key(id, scenario)
         return this.componentIdMap.get(key);
     }
 }
@@ -1126,7 +1458,13 @@ class GroupModel extends StructureModel {
     constructor(id: string, name: string, numInGroup: string, scenario: string, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
         super(id, name, scenario, supported, uses);
         this.numInGroup = numInGroup;
-        this.fieldRef = new FieldRef(id, this.scenario);
+        this.fieldRef = new FieldRef(id, this.scenario, Presence.Required);
+    }
+
+    clone(scenario: string): GroupModel {
+        let clone = new GroupModel(this.id, this.name, this.numInGroup, scenario);
+        this.members.forEach(m => clone.addMember(m.clone(scenario)));
+        return clone;
     }
 
     findFieldRef(id: string): FieldContext | undefined {
@@ -1170,17 +1508,21 @@ class MessageModel extends StructureModel {
         super(id, name, scenario, supported, uses);
         this.msgType = msgType;
     }
+
+    clone(scenario: string): MessageModel {
+        let clone = new MessageModel(this.id, this.name, this.msgType, scenario);
+        this.members.forEach(m => clone.addMember(m.clone(scenario)));
+        return clone;
+    }
 }
 
 class MessagesModel extends StructureModelMap<MessageModel>{
-    private messageTypeMap: Map<string, MessageModel> = new Map();
 
     constructor() {
         super();
     }
 
     add(message: MessageModel): this {
-        this.messageTypeMap.set(message.msgType, message);
         return super.add(message);
     }
 
@@ -1188,11 +1530,10 @@ class MessagesModel extends StructureModelMap<MessageModel>{
      * @param msgType FIX message type (tag 35 value)
      * @returns a MessageModel of the specified type, or undefined if not found
      */
-    getByMsgType(msgType: string): MessageModel {
-        return this.messageTypeMap.get(msgType);
+    getByMsgType(msgType: string): MessageModel[] {
+        return Array.from(this.values()).filter(m => m.msgType === msgType);
     }
 }
-
 
 class CodesetModel implements Keyed {
     static readonly defaultScenario = "base";
@@ -1223,14 +1564,14 @@ class CodesetModel implements Keyed {
     }
 
     /**
-     * Make a copy of this CodesetModel for a different scenario
+     * Make a copy of this CodesetModel for a different scenario, but with uses set to zero
      * @param scenario scenario name
      * @returns a new CodesetModel
      */
     clone(scenario: string): CodesetModel {
         let clone = new CodesetModel(this.id, this.name, scenario, this.type, this.supported);
         for (let code of this.codeNameMap.values()) {
-            clone.add(code);
+            clone.add(code.clone());
         }
         return clone;
     }
@@ -1244,6 +1585,10 @@ class CodesetModel implements Keyed {
         return this.codeNameMap.get(name);
     }
 
+    getByPrefixedName(name: string): CodeModel {
+        return this.codeNameMap.get(name);
+    }
+
     getByValue(value: string): CodeModel {
         return this.codeValueMap.get(value);
     }
@@ -1252,9 +1597,14 @@ class CodesetModel implements Keyed {
         return Array.from(this.codeValueMap.values()).filter((code: CodeModel) => code.uses > 0);
     }
 
-    key(): string {
-        return this.name + "." + this.scenario;
+    static key(name: string, scenario: string): string {
+        return name + "." + scenario;
     }
+
+    key(): string {
+        return CodesetModel.key(this.name, this.scenario);
+    }
+
 
     get supported(): IsSupported {
         return this.isSupported;
@@ -1291,7 +1641,7 @@ class OrchestraModel {
     readonly messages: MessagesModel = new MessagesModel();
 
     constructor() {
-        
+
     }
 
 }
@@ -1328,70 +1678,158 @@ class MessageInstance extends Array<FieldInstance> {
     }
 }
 
+/**
+ * Updates an OrchestraModel from log messages
+ */
 class LogModel {
-    private referenceModel: OrchestraModel;
+    private orchestraModel: OrchestraModel;
 
-    constructor(referenceModel: OrchestraModel) {
-        this.referenceModel = referenceModel;
+    /**
+     * Constructor
+     * @param orchestraModel model to update from logs
+     */
+    constructor(orchestraModel: OrchestraModel) {
+        this.orchestraModel = orchestraModel;
     }
 
     get model(): OrchestraModel {
-        return this.referenceModel;
+        return this.orchestraModel;
     }
 
     /**
-     * Returns the name of a message scenario corresponding to a message instance
-     * Initial implementation returns a message name from the reference Orchestra model. If not found in the refernce
-     * model, returns the msgType. If the message is not found, that indicates either that it is a user defined message or
-     * that it is not a known application message, e.g. session message.
+     * Returns a message scenario corresponding to a message instance 
      * @param message a message instance
-     * @returns a name of a message scenario key as defined by a reference Orchestra model. If not found in the refernce
-     * model, returns the msgType.
+     * @returns a message scenario from the model, or a new one if not previously defined
      */
-    getMessageScenarioKey(message: MessageInstance): string {
-        let messageModel: MessageModel = this.referenceModel.messages.getByMsgType(message.msgType);
-        if (messageModel) {
-            return messageModel.key();
-        } else {
-            return message.msgType;
+    getMessageScenario(messageInstance: MessageInstance): MessageModel {
+        // Get existing message scenario candidates by msgType
+        let messageModels: MessageModel[] = this.model.messages.getByMsgType(messageInstance.msgType);
+        let messageModel: MessageModel;
+
+        // Get pre-defined scenario differentiators by msgType 
+        let keys = messageScenarioKeys.keys.filter(v => v.msgType === messageInstance.msgType);
+        // Evaluate each candidate until a match is found
+        for (let k of keys) {
+            if (messageModel) {
+                break;
+            }
+            let fieldInstance: FieldInstance = messageInstance.find(f => f.tag === k.fieldId);
+            if (fieldInstance) {
+                for (let m of messageModels) {
+                    let fieldModel: FieldModel = this.model.fields.getById(k.fieldId, m.scenario);
+                    if (fieldModel) {
+                        let codesetModel: CodesetModel = this.model.codesets.get(CodesetModel.key(fieldModel.datatype, fieldModel.scenario));
+                        if (codesetModel) {
+                            let code: CodeModel = codesetModel.getByValue(fieldInstance.value);
+                            if (code && code.name === m.scenario) {
+                                // matching code found in this message scenario
+                                messageModel = m;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!messageModel) {
+                    // key field found but no message scenario for its code value yet
+                    let index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
+                    // clone the base scenario
+                    if (index != -1) {
+                        let defaultScenario: MessageModel = messageModels[index];
+                        let fieldModel: FieldModel = this.model.fields.getById(k.fieldId, MessageModel.defaultScenario);
+                        if (fieldModel) {
+                            let codesetModel: CodesetModel = this.model.codesets.get(CodesetModel.key(fieldModel.datatype, fieldModel.scenario));
+                            if (codesetModel) {
+                                let code: CodeModel = codesetModel.getByValue(fieldInstance.value);
+                                if (code) {
+                                    // Use code name as scenario name
+                                    messageModel = defaultScenario.clone(code.name);
+                                    this.model.messages.add(messageModel);
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        };
+
+        // Existing message model not found, so create a new one
+        if (!messageModel) {
+            // If no match by differentiator but base scenario exists for the message type, use it
+            let index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
+            if (index != -1) {
+                messageModel = messageModels[index];
+            } else {
+                // Default message scenario not found so create it
+                messageModel = new MessageModel(null, messageInstance.msgType, messageInstance.msgType, MessageModel.defaultScenario);
+                this.model.messages.add(messageModel);
+            }
         }
+        return messageModel;
+    }
+
+    getMessageModelKey(msgType: string, keyFieldId: string, fieldValue: string): string {
+        let message: MessageModel = this.model.messages.getByMsgType(msgType)[0];
+        let messageName;
+        if (message) {
+            messageName = message.name;
+        } else {
+            messageName = msgType;
+        }
+        let scenario = MessageModel.defaultScenario;
+        let field: FieldModel = this.model.fields.getById(keyFieldId, scenario);
+        if (field) {
+            let codeset: CodesetModel = this.model.codesets.get(field.datatype);
+            if (codeset) {
+                let code: CodeModel = codeset.getByValue(fieldValue);
+                if (code) {
+                    scenario = code.name;
+                }
+            }
+
+        }
+        return MessageModel.key(messageName, scenario);
     }
 
     messageListener = (messageInstance: MessageInstance) => {
-        let messageScenarioKey: string = this.getMessageScenarioKey(messageInstance);
-        let messageModel: MessageModel = this.referenceModel.messages.get(messageScenarioKey);
-        if (!messageModel) {
-            messageModel = new MessageModel(null, messageScenarioKey, messageInstance.msgType, MessageModel.defaultScenario);
-            this.referenceModel.messages.add(messageModel);
-        }
-
+        let messageModel: MessageModel = this.getMessageScenario(messageInstance);
 
         for (let fieldInstance of messageInstance) {
             let fieldContext: FieldContext = messageModel.findFieldRef(fieldInstance.tag);
             let fieldRef: FieldRef = fieldContext[0];
             if (!fieldRef) {
                 // Add a fieldRef not in the message reference model
-                fieldRef = new FieldRef(fieldInstance.tag, messageModel.scenario);
+                // Todo: perhaps infer presence as always present=Required, otherwise Optional 
+                fieldRef = new FieldRef(fieldInstance.tag, messageModel.scenario, Presence.Optional);
                 messageModel.addMember(fieldRef);
             }
 
             if (!fieldRef.field) {
-                fieldRef.field = this.referenceModel.fields.getById(fieldInstance.tag);
+                // set the field it is already defined for this scenario
+                fieldRef.field = this.model.fields.getById(fieldInstance.tag, messageModel.scenario);
                 if (!fieldRef.field) {
-                    fieldRef.field = new FieldModel(fieldRef.id, fieldRef.id.toString(), FieldModel.defaultDatatype, messageModel.scenario);
-                    this.referenceModel.fields.add(fieldRef.field);
-                }
-                let key: string = fieldRef.field.datatype + "." + messageModel.scenario;
-                let referenceCodeset: CodesetModel = this.referenceModel.codesets.get(key);
-                if (referenceCodeset) {
-                    fieldRef.codeset = referenceCodeset;
-                } else if (messageModel.scenario != CodesetModel.defaultScenario) {
-                    // if the codeset exists in base scenario, clone it
-                    key = fieldRef.field.datatype + "." + CodesetModel.defaultScenario;
-                    referenceCodeset = this.referenceModel.codesets.get(key);
-                    if (referenceCodeset) {
-                        fieldRef.codeset = referenceCodeset.clone(messageModel.scenario);
-                        this.referenceModel.codesets.set(key, fieldRef.codeset);
+                    // only create a field with this scenario if it has a codeset; otherwise use base scenario.
+                    let defaultField: FieldModel = this.model.fields.getById(fieldInstance.tag, FieldModel.defaultScenario);
+                    if (defaultField) {
+                        let codesetKey: string = CodesetModel.key(defaultField.datatype, FieldModel.defaultScenario);
+                        let defaultCodeset: CodesetModel = this.model.codesets.get(codesetKey);
+                        if (defaultCodeset) {
+                            codesetKey = CodesetModel.key(defaultField.datatype, messageModel.scenario);
+                            fieldRef.codeset = this.model.codesets.get(codesetKey);
+                            if (!fieldRef.codeset) {
+                                // if the codeset exists in base scenario, clone it
+                                fieldRef.codeset = defaultCodeset.clone(messageModel.scenario);
+                                this.model.codesets.set(codesetKey, fieldRef.codeset);
+                            }
+                            // clone the field for this scenario
+                            fieldRef.field = defaultField.clone(messageModel.scenario);
+                            this.orchestraModel.fields.add(fieldRef.field);
+                        } else {
+                            fieldRef.field = defaultField;
+                        }
+                    } else {
+                        // add a new field of default datatype
+                        fieldRef.field = new FieldModel(fieldRef.id, fieldRef.id.toString(), FieldModel.defaultDatatype, messageModel.scenario);
+                        this.orchestraModel.fields.add(fieldRef.field);
                     }
                 }
             }
@@ -1413,7 +1851,7 @@ class LogModel {
                 let code: CodeModel = fieldRef.codeset.getByValue(fieldInstance.value);
                 if (!code) {
                     // add a code not in reference model
-                    code = new CodeModel(fieldInstance.value, fieldInstance.value, IsSupported.Supported);
+                    code = new CodeModel(null, fieldInstance.value, fieldInstance.value, IsSupported.Supported);
                     fieldRef.codeset.add(code);
                 }
                 code.use();
@@ -1698,3 +2136,89 @@ class TVFieldParser {
     }
 
 }
+
+/**
+ * A message scenario is distinguished by a combination of msgType and one other key field
+ * For example, ExecutionReport (msgType=8) scenarios are distinguished by the values of field ExecType(150)
+ * todo: consider combinations of key fields, e.g. ExecType + SecurityType
+ */
+var messageScenarioKeys = {
+    "keys": [
+        {
+            "msgType": "6",
+            "fieldId": "28"
+        },
+        {
+            "msgType": "7",
+            "fieldId": "5"
+        },
+        {
+            "msgType": "8",
+            "fieldId": "150"
+        },
+        {
+            "msgType": "J",
+            "fieldId": "71"
+        },
+        {
+            "msgType": "k",
+            "fieldId": "374"
+        },
+        {
+            "msgType": "o",
+            "fieldId": "514"
+        },
+        {
+            "msgType": "p",
+            "fieldId": "514"
+        },
+        {
+            "msgType": "AE",
+            "fieldId": "487"
+        },
+        {
+            "msgType": "AK",
+            "fieldId": "666"
+        },
+        {
+            "msgType": "AL",
+            "fieldId": "709"
+        },
+        {
+            "msgType": "AM",
+            "fieldId": "709"
+        },
+        {
+            "msgType": "AS",
+            "fieldId": "71"
+        },
+        {
+            "msgType": "AY",
+            "fieldId": "903"
+        },
+        {
+            "msgType": "AZ",
+            "fieldId": "905"
+        },
+        {
+            "msgType": "DF",
+            "fieldId": "2320"
+        },
+        {
+            "msgType": "DG",
+            "fieldId": "2320"
+        },
+        {
+            "msgType": "DL",
+            "fieldId": "2439"
+        },
+        {
+            "msgType": "DM",
+            "fieldId": "2439"
+        },
+        {
+            "msgType": "DN",
+            "fieldId": "2439"
+        }
+    ]
+} 
