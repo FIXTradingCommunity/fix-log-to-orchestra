@@ -1208,7 +1208,7 @@ abstract class StructureModel implements Keyed, Usable {
      * @param id ID of the component
      * @returns a ComponentRef or undefined if not found
      */
-    findComponentRef(id: string): ComponentRef {
+    findComponentRef(id: string): ComponentRef | undefined {
         for (const member of this.members) {
             if (member.id === id && member instanceof ComponentRef) {
                 return member;
@@ -1222,7 +1222,7 @@ abstract class StructureModel implements Keyed, Usable {
      * @param id ID of the component
      * @returns a GroupRef or undefined if not found
      */
-    findGroupRef(id: string): GroupRef {
+    findGroupRef(id: string): GroupRef | undefined {
         for (const member of this.members) {
             if (member.id === id && member instanceof GroupRef) {
                 return member;
@@ -1504,6 +1504,8 @@ class GroupsModel extends StructureModelMap<GroupModel> {
 class MessageModel extends StructureModel {
     readonly msgType: string;
 
+    private keys: FieldInstance[];
+
     constructor(id: string, name: string, msgType: string, scenario: string, supported: IsSupported = IsSupported.Supported, uses: number = 0) {
         super(id, name, scenario, supported, uses);
         this.msgType = msgType;
@@ -1513,6 +1515,14 @@ class MessageModel extends StructureModel {
         let clone = new MessageModel(this.id, this.name, this.msgType, scenario);
         this.members.forEach(m => clone.addMember(m.clone(scenario)));
         return clone;
+    }
+
+    get keyFields(): FieldInstance[] {
+        return this.keys;
+    }
+
+    set keyFields(keys: FieldInstance[]) {
+        this.keys = keys;
     }
 }
 
@@ -1631,9 +1641,10 @@ class CodesetsModel extends Map<string, CodesetModel> {
 
 /**
  * A searchable model of an Orchestra file
- * Todo: In the initial implementation, scenarios are not considered. To be added in a later phase.
  */
 class OrchestraModel {
+    static readonly defaultScenario = "base";
+
     readonly fields: FieldsModel = new FieldsModel();
     readonly codesets: CodesetsModel = new CodesetsModel();
     readonly components: ComponentsModel = new ComponentsModel();
@@ -1644,20 +1655,127 @@ class OrchestraModel {
 
     }
 
+    /**
+     * Generate a scenario name from key field values assuming that the fields have an associated codeset.
+     * Format: <field name>=<code name>
+     * If more that one field, then repeat format with ":" delimiter.
+     * If keyFields is empty, then return default scenario name "base".
+     * Example: ExecType=Canceled
+     * @param keyFields array of tag-value fields
+     * @returns scenario name if successful or undefined if field or code names are unknown
+     */
+    generateScenarioName(keyFields: FieldInstance[]): string | undefined {
+        if (keyFields.length === 0) {
+            return OrchestraModel.defaultScenario;
+        }
+        let scenarioName: string = "";
+        for (let fieldInstance of keyFields) {
+            let field: FieldModel = this.fields.getById(fieldInstance.tag, OrchestraModel.defaultScenario);
+            if (field) {
+                let codeset: CodesetModel = this.codesets.get(CodesetModel.key(field.datatype, OrchestraModel.defaultScenario));
+                if (codeset) {
+                    let code: CodeModel = codeset.getByValue(fieldInstance.value);
+                    if (scenarioName.length > 0) {
+                        scenarioName += ":";
+                    }
+                    scenarioName += field.name;
+                    scenarioName += "=";
+                    if (code) {
+                        scenarioName += code.name;
+                    } else {
+                        scenarioName += "None";
+                    }
+                } else {
+                    return undefined;
+                }
+            } else {
+                return undefined;
+            }
+        }
+        return scenarioName;
+    }
+
+    /**
+     * Parses a scenario name as described above and translates it to an array of tag-value fields
+     * @param scenarioName scenario name
+     * @returns an array of fields or undefined if the name does not conform to the expected format
+     */
+    generateKeyFields(scenarioName: string): FieldInstance[] | undefined {
+        let keyFields: FieldInstance[] = new Array<FieldInstance>();
+        if (scenarioName === OrchestraModel.defaultScenario) {
+            return keyFields;
+        }
+        
+        let parts: string[] = scenarioName.split(":");
+        for (let part of parts) {
+            let subparts: string[] = part.split("=");
+            if (subparts.length !== 2) {
+                return undefined;
+            }
+            let value: string;
+            if (subparts[1] === "None") {
+                value = null;
+            } else {
+                value = subparts[1];
+            }
+            let keyField = new FieldInstance(subparts[0], value);
+            keyFields.push(keyField);
+        }
+        return keyFields;
+    }
+
 }
 
+/**
+ * A tag-value pair 
+ * Although it is not valid to have null value in a FIX message, it is allowed in this class
+ * to represent field not found in a message.
+ */
 class FieldInstance {
     readonly tag: string;
     readonly value: string;
+
+    /**
+     * Compares two arrays of fields
+     * @param fields1 first field array
+     * @param fields2 second field array
+     * @returns true if two arrays are same length and all fields are equal
+     */
+    static arrayEquals(fields1: FieldInstance[], fields2: FieldInstance[]): boolean {
+        if (fields1.length != fields2.length) {
+            return false;
+        }
+        for (let i = 0; i < fields1.length; i++) {
+            if (!fields1[i].equals(fields2[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     constructor(tag: string, value: string) {
         this.tag = tag;
         this.value = value;
     }
+
+    /**
+     * Compares another FieldInstance to this one
+     * @param field a field instance
+     * @returns true if tags and values are equal
+     */
+    equals(field: FieldInstance): boolean {
+        if (this.tag !== field.tag) {
+            return false;
+        }
+        if (this.value !== field.value) {
+            return false;
+        }
+        return true;
+    }
 }
 
 /**
- * Assumes tag-value encoding only
+ * A FIX tag-value message
  */
 class MessageInstance extends Array<FieldInstance> {
 
@@ -1666,9 +1784,9 @@ class MessageInstance extends Array<FieldInstance> {
     }
 
     /**
-     * @returns the value of the third field. If not populated, returns undefined.
+     * @returns the value of the third field (tag 35). If not populated, returns undefined.
      */
-    get msgType(): string {
+    get msgType(): string | undefined {
         let msgTypeField: FieldInstance = this[2];
         if (msgTypeField.tag === "35") {
             return msgTypeField.value;
@@ -1704,67 +1822,58 @@ class LogModel {
     getMessageScenario(messageInstance: MessageInstance): MessageModel {
         // Get existing message scenario candidates by msgType
         let messageModels: MessageModel[] = this.model.messages.getByMsgType(messageInstance.msgType);
-        let messageModel: MessageModel;
 
         // Get pre-defined scenario differentiators by msgType 
-        let keys = messageScenarioKeys.keys.filter(v => v.msgType === messageInstance.msgType);
-        // Evaluate each candidate until a match is found
-        for (let k of keys) {
-            if (messageModel) {
-                break;
-            }
-            let fieldInstance: FieldInstance = messageInstance.find(f => f.tag === k.fieldId);
-            if (fieldInstance) {
-                for (let m of messageModels) {
-                    let fieldModel: FieldModel = this.model.fields.getById(k.fieldId, m.scenario);
-                    if (fieldModel) {
-                        let codesetModel: CodesetModel = this.model.codesets.get(CodesetModel.key(fieldModel.datatype, fieldModel.scenario));
-                        if (codesetModel) {
-                            let code: CodeModel = codesetModel.getByValue(fieldInstance.value);
-                            if (code && code.name === m.scenario) {
-                                // matching code found in this message scenario
-                                messageModel = m;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (!messageModel) {
-                    // key field found but no message scenario for its code value yet
-                    let index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
-                    // clone the base scenario
-                    if (index != -1) {
-                        let defaultScenario: MessageModel = messageModels[index];
-                        let fieldModel: FieldModel = this.model.fields.getById(k.fieldId, MessageModel.defaultScenario);
-                        if (fieldModel) {
-                            let codesetModel: CodesetModel = this.model.codesets.get(CodesetModel.key(fieldModel.datatype, fieldModel.scenario));
-                            if (codesetModel) {
-                                let code: CodeModel = codesetModel.getByValue(fieldInstance.value);
-                                if (code) {
-                                    // Use code name as scenario name
-                                    messageModel = defaultScenario.clone(code.name);
-                                    this.model.messages.add(messageModel);
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-        };
+        let key = messageScenarioKeys.keys.filter(v => v.msgType === messageInstance.msgType)[0];
 
-        // Existing message model not found, so create a new one
-        if (!messageModel) {
-            // If no match by differentiator but base scenario exists for the message type, use it
+        if (key) {
+            // Locate the key field values in ths message instance. If a field is not found, represent it as null value.
+            let fieldInstances: FieldInstance[] = new Array< FieldInstance>();
+            for (let fieldId of key.fieldIds) {
+                let fieldInstance: FieldInstance = messageInstance.find(field => field.tag === fieldId);
+                if (fieldInstance) {
+                    fieldInstances.push(fieldInstance);
+                } else {
+                    fieldInstances.push(new FieldInstance(fieldId, null));
+                }
+            }
+
+            // Try to match one of the existing message scenarios
+            for (let m of messageModels) {
+                let modelKeyFields: FieldInstance[] = m.keyFields;
+                if (!modelKeyFields) {
+                    modelKeyFields = this.orchestraModel.generateKeyFields(m.scenario);
+                    m.keyFields = modelKeyFields;
+                }
+                // A match found, return it
+                if (FieldInstance.arrayEquals(fieldInstances, modelKeyFields)) {
+                    return m;
+                }
+            }
+
+            // No matching message scenario so create it by cloning the default scenario            
             let index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
             if (index != -1) {
-                messageModel = messageModels[index];
-            } else {
-                // Default message scenario not found so create it
-                messageModel = new MessageModel(null, messageInstance.msgType, messageInstance.msgType, MessageModel.defaultScenario);
+                let defaultScenario: MessageModel = messageModels[index];
+                let scenarioName = this.orchestraModel.generateScenarioName(fieldInstances);
+                let messageModel: MessageModel = defaultScenario.clone(scenarioName);
+                messageModel.keyFields = fieldInstances;
                 this.model.messages.add(messageModel);
+                return messageModel;
             }
         }
-        return messageModel;
+
+        // No match found, so return default scenario
+        let index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
+        if (index != -1) {
+            let defaultScenario: MessageModel = messageModels[index];
+            return defaultScenario;
+        } else {
+            // Default message scenario not found so create it
+            let messageModel: MessageModel = new MessageModel(null, messageInstance.msgType, messageInstance.msgType, MessageModel.defaultScenario);
+            this.model.messages.add(messageModel);
+            return messageModel;
+        }
     }
 
     getMessageModelKey(msgType: string, keyFieldId: string, fieldValue: string): string {
@@ -2062,7 +2171,7 @@ class TVMessageParser implements Iterator<TVFieldParser> {
 class TVFieldParser {
     static readonly tagDelimiter: string = "=";
     static readonly fieldDelimiter: string = String.fromCharCode(1);
-    static lengthFieldIds: Array<string> = new Array();
+    static lengthFieldIds: Array<string> = new Array<string>();
 
     private str: string;
     private tagOffset: number;
@@ -2141,84 +2250,89 @@ class TVFieldParser {
  * A message scenario is distinguished by a combination of msgType and one other key field
  * For example, ExecutionReport (msgType=8) scenarios are distinguished by the values of field ExecType(150)
  * todo: consider combinations of key fields, e.g. ExecType + SecurityType
+ * todo: different key sets for different versions of FIX
  */
 var messageScenarioKeys = {
     "keys": [
         {
             "msgType": "6",
-            "fieldId": "28"
+            "fieldIds": ["28"]
         },
         {
             "msgType": "7",
-            "fieldId": "5"
+            "fieldIds": ["5"]
         },
         {
             "msgType": "8",
-            "fieldId": "150"
+            "fieldIds": ["150", "39"]
+        },
+        {
+            "msgType": "D",
+            "fieldIds": ["167"]
         },
         {
             "msgType": "J",
-            "fieldId": "71"
+            "fieldIds": ["71"]
         },
         {
             "msgType": "k",
-            "fieldId": "374"
+            "fieldIds": ["374"]
         },
         {
             "msgType": "o",
-            "fieldId": "514"
+            "fieldIds": ["514"]
         },
         {
             "msgType": "p",
-            "fieldId": "514"
+            "fieldIds": ["514"]
         },
         {
             "msgType": "AE",
-            "fieldId": "487"
+            "fieldIds": ["487"]
         },
         {
             "msgType": "AK",
-            "fieldId": "666"
+            "fieldIds": ["666"]
         },
         {
             "msgType": "AL",
-            "fieldId": "709"
+            "fieldIds": ["709"]
         },
         {
             "msgType": "AM",
-            "fieldId": "709"
+            "fieldIds": ["709"]
         },
         {
             "msgType": "AS",
-            "fieldId": "71"
+            "fieldIds": ["71"]
         },
         {
             "msgType": "AY",
-            "fieldId": "903"
+            "fieldIds": ["903"]
         },
         {
             "msgType": "AZ",
-            "fieldId": "905"
+            "fieldIds": ["905"]
         },
         {
             "msgType": "DF",
-            "fieldId": "2320"
+            "fieldIds": ["2320"]
         },
         {
             "msgType": "DG",
-            "fieldId": "2320"
+            "fieldIds": ["2320"]
         },
         {
             "msgType": "DL",
-            "fieldId": "2439"
+            "fieldIds": ["2439"]
         },
         {
             "msgType": "DM",
-            "fieldId": "2439"
+            "fieldIds": ["2439"]
         },
         {
             "msgType": "DN",
-            "fieldId": "2439"
+            "fieldIds": ["2439"]
         }
     ]
 } 
