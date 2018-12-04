@@ -1,26 +1,35 @@
 ﻿var referenceFile: File;
-var logFiles: File[];
+var logFiles: FileList;
 var orchestraFileName: string = "myorchestra.xml";
+var appendOnly: boolean = false;
 
-var inputOrchestra = function (event) {
-    referenceFile = event.target.files[0];
+var inputOrchestra = function (event: Event) {
+    let element = event.target as HTMLInputElement;
+    referenceFile = element.files[0];
     removeAlert();
 };
 
 /**
- * Select one or more log files to parse
+ * Select one or more log files to parse 
  */
-var inputLogs = function (event) {
-    logFiles = event.target.files;
+var inputLogs = function (event: Event) {
+    let element = event.target as HTMLInputElement;
+    logFiles = element.files;
     removeAlert();
 };
 
-var outputOrchestra = function (event) {
-    orchestraFileName = event.target.value;
+var outputOrchestra = function (event: Event) {
+    let element = event.target as HTMLInputElement;
+    orchestraFileName = element.value;
     removeAlert();
 };
 
-var createOrchestra = async function (event) {
+var appendToggle = function (event: Event) {
+    let element = event.target as HTMLInputElement;
+    appendOnly = element.checked;
+};
+
+var createOrchestra = async function (event: Event) {
     let isValid: boolean = validateInput(event);
     if (isValid) {
         removeAlert();
@@ -70,7 +79,7 @@ var createOrchestra = async function (event) {
     }
 }
 
-var validateInput = function (event): boolean {
+var validateInput = function (event: Event): boolean {
     let isValid: boolean = true;
     if (!referenceFile || !logFiles) {
         isValid = false;
@@ -120,17 +129,18 @@ var createLink = function (contents: Blob) {
     a.textContent = 'File ready';
 
     output.appendChild(a);
-    a.onclick = function (e) {
-        if ('disabled' in this.dataset) {
+    a.onclick = function (event: Event) {
+        let element = event.target as HTMLAnchorElement;
+        if ('disabled' in element.dataset) {
             return false;
         }
 
-        cleanUp(this);
+        cleanUp(element);
     };
 
-    var cleanUp = function (a) {
+    var cleanUp = function (a: HTMLAnchorElement) {
         a.textContent = 'Downloaded';
-        a.dataset.disabled = true;
+        a.dataset.disabled = "true";
 
         setTimeout(function () {
             window.URL.revokeObjectURL(a.href);
@@ -169,7 +179,7 @@ namespace IsSupported {
      * Reverse mapping for IsSupported enum
      * @param str string value from DOM
      */
-    export function stringToSupported(str: string): IsSupported {
+    export function fromString(str: string): IsSupported {
         switch (str) {
             case "forbidden":
                 return IsSupported.Forbidden;
@@ -194,7 +204,7 @@ namespace Presence {
      * Reverse mapping for Presence enum
      * @param str string value from DOM
     */
-    export function stringToPresence(str: string): Presence {
+    export function fromString(str: string): Presence {
         switch (str) {
             case "required":
                 return Presence.Required;
@@ -211,7 +221,7 @@ namespace Presence {
 }
 
 class OrchestraFile {
-    static readonly MIME_TYPE: string = "application/xml";
+    static readonly MIME_TYPE: SupportedType  = "application/xml";
 
     private file: File;
     private document: Document = new Document();
@@ -295,32 +305,39 @@ class OrchestraFile {
         this.addDomMessages(logModel.model.messages);
         this.addDomComponents(logModel.model.components);
         this.addDomGroups(logModel.model.groups);
-        this.removeUnusedMessages(logModel.model.messages);
-        this.removeUnusedMessageMembers(logModel.model.messages);
-        this.removeUnusedComponentMembers(logModel.model.components);
-        this.removeUnusedGroupMembers(logModel.model.groups);
-        this.removeUnusedComponents(logModel.model.components);
-        this.removeUnusedGroups(logModel.model.groups);
+        if (!appendOnly) {
+            this.removeUnusedMessages(logModel.model.messages);
+            this.removeUnusedMessageMembers(logModel.model.messages);
+            this.removeUnusedComponentMembers(logModel.model.components);
+            this.removeUnusedGroupMembers(logModel.model.groups);
+            this.removeUnusedComponents(logModel.model.components);
+            this.removeUnusedGroups(logModel.model.groups);
+        }
         showProgress(progressNode, 100); 
     }
 
     private addDomMessages(messages: MessagesModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
-        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages", this.dom, namespaceResolver,
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
+        let messagesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        let messagesElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+        let messagesElement: Element = messagesSnapshot.snapshotItem(0) as Element;
+
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
 
         Array.from(messages.values()).filter(m => m.uses > 0).forEach((message: MessageModel) => {
 
-            if (message.scenario === MessageModel.defaultScenario) {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message[@name='" + message.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            } else {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message[@name='" + message.name + "' and @scenario= '" + message.scenario + "']",
-                    this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            let messageElement: Element;
+            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
+                let node: Element = nodesSnapshot.snapshotItem(i) as Element;
+                let name: string = node.getAttribute("name");
+                let scenario: string = node.getAttribute("scenario") || "base";
+                if (message.name === name && message.scenario === scenario) {
+                    messageElement = node;
+                    break;
+                }
             }
-            let messageElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+            
             if (!messageElement) {
                 messageElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:message");
                 messageElement.setAttribute("name", message.name);
@@ -370,7 +387,7 @@ class OrchestraFile {
     }
 
     private updateDomMetadata(): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:metadata", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         let metadataElement: Element = nodesSnapshot.snapshotItem(0) as Element;
@@ -404,7 +421,7 @@ class OrchestraFile {
     }
 
     private extractFieldsModel(fieldsModel: FieldsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields/fixr:field", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let element: Element = iterator.iterateNext() as Element;
@@ -414,7 +431,7 @@ class OrchestraFile {
                 let id: string = element.getAttribute("id");
                 let name: string = element.getAttribute("name");
                 let type: string = element.getAttribute("type");
-                let scenario: string = element.getAttribute("scenario");
+                let scenario: string = element.getAttribute("scenario") || "base";
                 fieldsModel.add(new FieldModel(id, name, type, scenario));
             }
             element = iterator.iterateNext() as Element;
@@ -422,17 +439,17 @@ class OrchestraFile {
     }
 
     private extractCodesetsModel(codesetsModel: CodesetsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets/fixr:codeSet", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let codesetElement: Element = iterator.iterateNext() as Element;
         while (codesetElement) {
             let id: string = codesetElement.getAttribute("id");
             let name: string = codesetElement.getAttribute("name");
-            let scenario: string = codesetElement.getAttribute("scenario");
+            let scenario: string = codesetElement.getAttribute("scenario") || "base";
             let type: string = codesetElement.getAttribute("type");
             let supported: string = codesetElement.getAttribute("supported");
-            let codeset = new CodesetModel(id, name, scenario, type, IsSupported.stringToSupported(supported));
+            let codeset = new CodesetModel(id, name, scenario, type, IsSupported.fromString(supported));
             codesetsModel.set(codeset.key(), codeset);
             let childElement: Element = codesetElement.firstElementChild;
             while (childElement) {
@@ -442,7 +459,7 @@ class OrchestraFile {
                     let name: string = childElement.getAttribute("name");
                     let value: string = childElement.getAttribute("value");
                     supported = childElement.getAttribute("supported");
-                    let code: CodeModel = new CodeModel(id, name, value, IsSupported.stringToSupported(supported));
+                    let code: CodeModel = new CodeModel(id, name, value, IsSupported.fromString(supported));
                     codeset.add(code);
                 }
                 childElement = childElement.nextElementSibling;
@@ -452,7 +469,7 @@ class OrchestraFile {
     }
 
     private extractComponentsModel(componentsModel: ComponentsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let componentElement: Element = iterator.iterateNext() as Element;
@@ -461,7 +478,7 @@ class OrchestraFile {
             if (elementName === "component") {
                 let id: string = componentElement.getAttribute("id");
                 let name: string = componentElement.getAttribute("name");
-                let scenario: string = componentElement.getAttribute("scenario");
+                let scenario: string = componentElement.getAttribute("scenario") || "base";
                 let componentModel = new ComponentModel(id, name, scenario);
                 componentsModel.add(componentModel);
                 let memberElement: Element = componentElement.firstElementChild;
@@ -472,7 +489,7 @@ class OrchestraFile {
     }
 
     private extractGroupsModel(groupsModel: GroupsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let groupElement: Element = iterator.iterateNext() as Element;
@@ -481,7 +498,7 @@ class OrchestraFile {
             if (elementName === "group") {
                 let id: string = groupElement.getAttribute("id");
                 let name: string = groupElement.getAttribute("name");
-                let scenario: string = groupElement.getAttribute("scenario");
+                let scenario: string = groupElement.getAttribute("scenario") || "base";
                 let memberElement: Element = groupElement.firstElementChild;
                 let elementName: string = memberElement.localName;
                 if (elementName === "numInGroup") {
@@ -497,7 +514,7 @@ class OrchestraFile {
     }
 
     private extractMessagesModel(messagesModel: MessagesModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let messageElement: Element = iterator.iterateNext() as Element;
@@ -507,7 +524,7 @@ class OrchestraFile {
                 let id: string = messageElement.getAttribute("id");
                 let name: string = messageElement.getAttribute("name");
                 let msgType: string = messageElement.getAttribute("msgType");
-                let scenario: string = messageElement.getAttribute("scenario");
+                let scenario: string = messageElement.getAttribute("scenario") || "base";
                 let messageModel: MessageModel = new MessageModel(id, name, msgType, scenario);
                 messagesModel.add(messageModel);
                 let structureElement = messageElement.firstElementChild;
@@ -521,7 +538,7 @@ class OrchestraFile {
     }
 
     private removeUnusedMessages(messagesModel: MessagesModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let elementsToRemove = new Array<Element>();
@@ -546,7 +563,7 @@ class OrchestraFile {
     }
 
     private removeUnusedMessageMembers(messagesModel: MessagesModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let elementsToRemove = new Array<Element>();
@@ -597,24 +614,29 @@ class OrchestraFile {
     }
 
     private updateDomCodes(codesetsModel: CodesetsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
-        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets", this.dom, namespaceResolver,
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
+        let codesetsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        let codesetsElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+        let codesetsElement: Element = codesetsSnapshot.snapshotItem(0) as Element;
+
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets/fixr:codeSet", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
 
         codesetsModel.forEach((codeset: CodesetModel) => {
             let usedCodes: CodeModel[] = codeset.getUsedCodes();
             let usedCodeValues: string[] = usedCodes.map((cs) => cs.value);
 
-            if (codeset.scenario === CodesetModel.defaultScenario) {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:codeSets/fixr:codeSet[@name='" + codeset.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            } else {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:codeSets/fixr:codeSet[@name='" + codeset.name + "' and @scenario= '" + codeset.scenario + "']",
-                    this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            let codesetElement: Element;
+            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
+                let node: Element = nodesSnapshot.snapshotItem(i) as Element;
+                let name: string = node.getAttribute("name");
+                let scenario: string = node.getAttribute("scenario") || "base";
+                if (codeset.name === name && codeset.scenario === scenario) {
+                    codesetElement = node;
+                    break;
+                }
             }
-            let codesetElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+
             if (!codesetElement) {
                 codesetElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:codeSet");
                 codesetElement.setAttribute("name", codeset.name);
@@ -626,7 +648,7 @@ class OrchestraFile {
 
             if (usedCodes.length) {
                 codesetElement.setAttribute("supported", "supported");
-            } else {
+            } else if (!appendOnly) {
                 codesetElement.setAttribute("supported", "ignored");
             }
 
@@ -664,22 +686,27 @@ class OrchestraFile {
     }
 
     private updateDomFields(fieldsModel: FieldsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
-        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields", this.dom, namespaceResolver,
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
+        let fieldsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        let fieldsElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+        let fieldsElement: Element = fieldsSnapshot.snapshotItem(0) as Element;
+
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields/fixr:field", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
 
         fieldsModel.forEach((field: FieldModel) => {
 
-            if (field.scenario === FieldModel.defaultScenario) {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:fields/fixr:field[@name='" + field.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            } else {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:fields/fixr:field[@name='" + field.name + "' and @scenario= '" + field.scenario + "']",
-                    this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            let fieldElement: Element;
+            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
+                let node: Element = nodesSnapshot.snapshotItem(i) as Element;
+                let name: string = node.getAttribute("name");
+                let scenario: string = node.getAttribute("scenario") || "base";
+                if (field.name === name && field.scenario === scenario) {
+                    fieldElement = node;
+                    break;
+                }
             }
-            let fieldElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+
             if (!fieldElement) {
                 fieldElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:field");
                 fieldElement.setAttribute("name", field.name);
@@ -691,29 +718,34 @@ class OrchestraFile {
 
             if (field.uses > 0) {
                 fieldElement.setAttribute("supported", "supported");
-            } else {
+            } else if (!appendOnly) {
                 fieldElement.setAttribute("supported", "ignored");
             }
         });
     }
 
     private addDomComponents(componentsModel: ComponentsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
-        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components", this.dom, namespaceResolver,
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
+        let componentsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        let componentsElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+        let componentsElement: Element = componentsSnapshot.snapshotItem(0) as Element;
+
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
 
         componentsModel.forEach((component: ComponentModel) => {
 
-            if (component.scenario === FieldModel.defaultScenario) {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component[@name='" + component.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            } else {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component[@name='" + component.name + "' and @scenario= '" + component.scenario + "']",
-                    this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            let componentElement: Element;
+            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
+                let node: Element = nodesSnapshot.snapshotItem(i) as Element;
+                let name: string = node.getAttribute("name");
+                let scenario: string = node.getAttribute("scenario") || "base";
+                if (component.name === name && component.scenario === scenario) {
+                    componentElement = node;
+                    break;
+                }
             }
-            let componentElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+
             if (!componentElement) {
                 componentElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:component");
                 componentElement.setAttribute("name", component.name);
@@ -732,22 +764,27 @@ class OrchestraFile {
     }
 
     private addDomGroups(groupsModel: GroupsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
-        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver,
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
+        let groupsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        let componentsElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+        let componentsElement: Element = groupsSnapshot.snapshotItem(0) as Element;
+
+        let nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
 
         groupsModel.forEach((group: GroupModel) => {
 
-            if (group.scenario === FieldModel.defaultScenario) {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group[@name='" + group.name + "' and (@scenario='base' or not(@scenario))]", this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            } else {
-                nodesSnapshot = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group[@name='" + group.name + "' and @scenario= '" + group.scenario + "']",
-                    this.dom, namespaceResolver,
-                    XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            let groupElement: Element;
+            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
+                let node: Element = nodesSnapshot.snapshotItem(i) as Element;
+                let name: string = node.getAttribute("name");
+                let scenario: string = node.getAttribute("scenario") || "base";
+                if (group.name === name && group.scenario === scenario) {
+                    groupElement = node;
+                    break;
+                }
             }
-            let groupElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+
             if (!groupElement) {
                 groupElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:group");
                 groupElement.setAttribute("name", group.name);
@@ -767,7 +804,7 @@ class OrchestraFile {
 
 
     private removeUnusedComponentMembers(componentsModel: ComponentsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let elementsToRemove = new Array<Element>();
@@ -818,7 +855,7 @@ class OrchestraFile {
     }
 
     private removeUnusedGroupMembers(groupsModel: GroupsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let elementsToRemove = new Array<Element>();
@@ -868,7 +905,7 @@ class OrchestraFile {
     }
 
     private removeUnusedComponents(componentsModel: ComponentsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let elementsToRemove = new Array<Element>();
@@ -893,7 +930,7 @@ class OrchestraFile {
     }
 
     private removeUnusedGroups(groups: GroupsModel): void {
-        let namespaceResolver: XPathNSResolver = document.createNSResolver(this.dom);
+        let namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         let iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver,
             XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let elementsToRemove = new Array<Element>();
@@ -922,7 +959,7 @@ class OrchestraFile {
             let elementName: string = memberElement.localName;
             let memberId: string = memberElement.getAttribute("id");
             let presenceStr: string = memberElement.getAttribute("presence");
-            let presence: Presence = Presence.stringToPresence(presenceStr);
+            let presence: Presence = Presence.fromString(presenceStr);
             switch (elementName) {
                 case "fieldRef":
                     let fieldRef: FieldRef = new FieldRef(memberId, structuralModel.scenario, presence);
@@ -1853,14 +1890,18 @@ class LogModel {
 
             // No matching message scenario so create it by cloning the default scenario            
             let index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
+            let scenarioToClone: MessageModel;
             if (index != -1) {
-                let defaultScenario: MessageModel = messageModels[index];
-                let scenarioName = this.orchestraModel.generateScenarioName(fieldInstances);
-                let messageModel: MessageModel = defaultScenario.clone(scenarioName);
-                messageModel.keyFields = fieldInstances;
-                this.model.messages.add(messageModel);
-                return messageModel;
+                scenarioToClone = messageModels[index];
+            } else {
+                // No default scenario, fall back to the first one encountered
+                scenarioToClone = messageModels[0];
             }
+            let scenarioName = this.orchestraModel.generateScenarioName(fieldInstances);
+            let messageModel: MessageModel = scenarioToClone.clone(scenarioName);
+            messageModel.keyFields = fieldInstances;
+            this.model.messages.add(messageModel);
+            return messageModel;
         }
 
         // No match found, so return default scenario
