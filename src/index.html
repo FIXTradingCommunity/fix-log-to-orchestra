@@ -4,12 +4,13 @@
 <head>
 	<meta charset="utf-8" />
 	<title>FIX Log to Orchestra</title>
-	<link rel="stylesheet" href="orchestra.css" type="text/css" />
+	<link rel="stylesheet" href="log2orchestra.css" type="text/css" />
 	<script src="app.js"></script>
 </head>
 <body>
+	<img src="FIXorchestraLogo.png" alt="FIX Orchestra" width="200">
 	<h1>FIX Log to Orchestra</h1>
-	<p>Creates an Orchestra file from a FIX message log.</p>
+	<h3>Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
 	<div class="container">
 		<div class="field">
 			<label for="inputFile">Reference Orchestra file</label><br />
@@ -19,10 +20,17 @@
 			</div>
 		</div>
 		<div class="field">
-			<label for="logFile">FIX tag-value log files</label><br />
+			<label for="logFile">FIX messsage log files</label><br />
 			<input type="file" id="logFile" multiple="multiple" onchange="inputLogs(event)">
 			<div class="bar">
 				<div id="logFileBar" class="progressBar"></div>
+			</div>
+		</div>
+		<div class="field">
+			<label for="inputFile">Configuration file for scenarios (optional)</label><br />
+			<input type="file" id="configurationFile" accept=".json" onchange="inputConfiguration(event)">
+			<div class="bar">
+				<div id="configurationFileBar" class="progressBar"></div>
 			</div>
 		</div>
 		<div class="field">
@@ -31,6 +39,10 @@
 			<div class="bar">
 				<div id="outputFileBar" class="progressBar"></div>
 			</div>
+		</div>
+		<div>
+			<input type="checkbox" id="appendCheckbox" onchange="appendToggle(event)" />
+			<label for="appendCheckbox">Append only (removes no scenarios)</label><br />
 		</div>
 		<button type="button" id="createButton" onclick="createOrchestra(event)">Create Orchestra file</button><output id="output"></output>
 	</div>

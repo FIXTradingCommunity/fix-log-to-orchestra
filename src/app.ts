@@ -1,8 +1,106 @@
-﻿var referenceFile: File;
+﻿
+/**
+ * JSON configuration
+ * A message scenario is distinguished by a combination of msgType and one or more key fields
+ * For example, ExecutionReport (msgType=8) scenarios are distinguished by the values of field ExecType(150)
+ */
+//import defaultMessageScenarioKeys from "./log2orchestra-config.json";
+
+var defaultMessageScenarioKeys = {
+    "keys": [
+        {
+            "msgType": "6",
+            "fieldIds": ["28"]
+        },
+        {
+            "msgType": "7",
+            "fieldIds": ["5"]
+        },
+        {
+            "msgType": "8",
+            "fieldIds": ["150", "39"]
+        },
+        {
+            "msgType": "D",
+            "fieldIds": ["167"]
+        },
+        {
+            "msgType": "J",
+            "fieldIds": ["71"]
+        },
+        {
+            "msgType": "k",
+            "fieldIds": ["374"]
+        },
+        {
+            "msgType": "o",
+            "fieldIds": ["514"]
+        },
+        {
+            "msgType": "p",
+            "fieldIds": ["514"]
+        },
+        {
+            "msgType": "AE",
+            "fieldIds": ["487"]
+        },
+        {
+            "msgType": "AK",
+            "fieldIds": ["666"]
+        },
+        {
+            "msgType": "AL",
+            "fieldIds": ["709"]
+        },
+        {
+            "msgType": "AM",
+            "fieldIds": ["709"]
+        },
+        {
+            "msgType": "AS",
+            "fieldIds": ["71"]
+        },
+        {
+            "msgType": "AY",
+            "fieldIds": ["903"]
+        },
+        {
+            "msgType": "AZ",
+            "fieldIds": ["905"]
+        },
+        {
+            "msgType": "DF",
+            "fieldIds": ["2320"]
+        },
+        {
+            "msgType": "DG",
+            "fieldIds": ["2320"]
+        },
+        {
+            "msgType": "DL",
+            "fieldIds": ["2439"]
+        },
+        {
+            "msgType": "DM",
+            "fieldIds": ["2439"]
+        },
+        {
+            "msgType": "DN",
+            "fieldIds": ["2439"]
+        }
+    ]
+}
+
+
+var referenceFile: File;
 var logFiles: FileList;
+var configurationFile: File;
 var orchestraFileName: string = "myorchestra.xml";
 var appendOnly: boolean = false;
 
+/*
+ * Select a reference Orchestra file to read
+ */
 var inputOrchestra = function (event: Event) {
     let element = event.target as HTMLInputElement;
     referenceFile = element.files[0];
@@ -18,17 +116,35 @@ var inputLogs = function (event: Event) {
     removeAlert();
 };
 
+/*
+ * Select a JSON configuration file for scenarios
+ */
+var inputConfiguration = function (event: Event) {
+    let element = event.target as HTMLInputElement;
+    configurationFile = element.files[0];
+    removeAlert();
+};
+
+/**
+ * Enter a name for the Orchestra file to produce
+ */
 var outputOrchestra = function (event: Event) {
     let element = event.target as HTMLInputElement;
     orchestraFileName = element.value;
     removeAlert();
 };
 
+/**
+ * Toggle the value of append-only mode
+ */
 var appendToggle = function (event: Event) {
     let element = event.target as HTMLInputElement;
     appendOnly = element.checked;
 };
 
+/**
+ * Start execution
+ */
 var createOrchestra = async function (event: Event) {
     let isValid: boolean = validateInput(event);
     if (isValid) {
@@ -62,6 +178,14 @@ var createOrchestra = async function (event: Event) {
             for (let i = 0; i < logFiles.length; i++) {
                 let logReader: LogReader = new LogReader(logFiles[i], logProgress, logModel.messageListener);
                 await logReader.readFile();
+            }
+
+            // if a configuration file was selected, read it
+            if (configurationFile) {
+                let configProgress: HTMLElement = document.getElementById("configurationFileBar");
+                let config = new ConfigurationFile(configurationFile, configProgress);
+                await config.readFile();
+                defaultMessageScenarioKeys = config.messageScenarioKeys;
             }
 
             // update the output Orchestra file from the model
@@ -1861,7 +1985,7 @@ class LogModel {
         let messageModels: MessageModel[] = this.model.messages.getByMsgType(messageInstance.msgType);
 
         // Get pre-defined scenario differentiators by msgType 
-        let key = messageScenarioKeys.keys.filter(v => v.msgType === messageInstance.msgType)[0];
+        let key = defaultMessageScenarioKeys.keys.filter(v => v.msgType === messageInstance.msgType)[0];
 
         if (key) {
             // Locate the key field values in ths message instance. If a field is not found, represent it as null value.
@@ -2287,93 +2411,54 @@ class TVFieldParser {
 
 }
 
-/**
- * A message scenario is distinguished by a combination of msgType and one other key field
- * For example, ExecutionReport (msgType=8) scenarios are distinguished by the values of field ExecType(150)
- * todo: consider combinations of key fields, e.g. ExecType + SecurityType
- * todo: different key sets for different versions of FIX
- */
-var messageScenarioKeys = {
-    "keys": [
-        {
-            "msgType": "6",
-            "fieldIds": ["28"]
-        },
-        {
-            "msgType": "7",
-            "fieldIds": ["5"]
-        },
-        {
-            "msgType": "8",
-            "fieldIds": ["150", "39"]
-        },
-        {
-            "msgType": "D",
-            "fieldIds": ["167"]
-        },
-        {
-            "msgType": "J",
-            "fieldIds": ["71"]
-        },
-        {
-            "msgType": "k",
-            "fieldIds": ["374"]
-        },
-        {
-            "msgType": "o",
-            "fieldIds": ["514"]
-        },
-        {
-            "msgType": "p",
-            "fieldIds": ["514"]
-        },
-        {
-            "msgType": "AE",
-            "fieldIds": ["487"]
-        },
-        {
-            "msgType": "AK",
-            "fieldIds": ["666"]
-        },
-        {
-            "msgType": "AL",
-            "fieldIds": ["709"]
-        },
-        {
-            "msgType": "AM",
-            "fieldIds": ["709"]
-        },
-        {
-            "msgType": "AS",
-            "fieldIds": ["71"]
-        },
-        {
-            "msgType": "AY",
-            "fieldIds": ["903"]
-        },
-        {
-            "msgType": "AZ",
-            "fieldIds": ["905"]
-        },
-        {
-            "msgType": "DF",
-            "fieldIds": ["2320"]
-        },
-        {
-            "msgType": "DG",
-            "fieldIds": ["2320"]
-        },
-        {
-            "msgType": "DL",
-            "fieldIds": ["2439"]
-        },
-        {
-            "msgType": "DM",
-            "fieldIds": ["2439"]
-        },
-        {
-            "msgType": "DN",
-            "fieldIds": ["2439"]
-        }
-    ]
-} 
+class ConfigurationFile {
+    static readonly MIME_TYPE: string = "application/json";
+
+    private file: File;
+    private progressNode: HTMLElement;
+    private keys: any;
+
+    constructor(file: File, progressNode: HTMLElement) {
+        this.file = file;
+        this.progressNode = progressNode;
+    }
+
+    get messageScenarioKeys(): any {
+        return this.keys;
+    }
+
+    get size(): number {
+        return this.file.size;
+    }
+
+    readFile(): Promise<void> {
+        let reader = new FileReader();
+
+        return new Promise<void>((resolve, reject) => {
+            reader.onload = () => {
+                showProgress(this.progressNode, 100);
+                let res = reader.result;
+                if (typeof res === "string") {
+                    this.keys = JSON.parse(res);
+                } else {
+                    this.keys = JSON.parse(res.toString());
+                }
+                resolve();
+            }
+            reader.onerror = () => {
+                showProgress(this.progressNode, -1);
+                reader.abort();
+                reject(reader.error);
+            }
+            reader.onprogress = (event: ProgressEvent) => {
+                if (event.lengthComputable) {
+                    showProgress(this.progressNode, Math.floor(event.loaded * 100 / event.total));
+                }
+            }
+            reader.readAsText(this.file);
+        });
+    }
+}
+
+
+
