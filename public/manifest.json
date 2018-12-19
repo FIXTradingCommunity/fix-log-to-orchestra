@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "short_name": "log2orchestra",
+  "name": "FIX log to Orchestra",
+  "version": "0.1.0",
+  "description": "Creates an Orchestra file from one or more FIX message logs (tag-value encoding)",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

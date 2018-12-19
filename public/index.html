@@ -4,10 +4,17 @@
 <head>
 	<meta charset="utf-8" />
 	<title>FIX Log to Orchestra</title>
-	<link rel="stylesheet" href="log2orchestra.css" type="text/css" />
-	<script src="app.js"></script>
+	<link rel="stylesheet" href="%PUBLIC_URL%/log2orchestra.css" type="text/css" />
+	<!--
+	      manifest.json provides metadata used when your web app is added to the
+	      homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
+	    -->
+	<link rel="manifest" href="%PUBLIC_URL%/manifest.json">
 </head>
 <body>
+	<noscript>
+		You need to enable JavaScript to run this app.
+	</noscript>
 	<img src="FIXorchestraLogo.png" alt="FIX Orchestra" width="200">
 	<h1>FIX Log to Orchestra</h1>
 	<h3>Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>

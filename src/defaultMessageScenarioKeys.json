@@ -1,0 +1,84 @@
+{
+    "keys": [
+        {
+            "msgType": "6",
+            "fieldIds": ["28"]
+        },
+        {
+            "msgType": "7",
+            "fieldIds": ["5"]
+        },
+        {
+            "msgType": "8",
+            "fieldIds": ["150", "39"]
+        },
+        {
+            "msgType": "D",
+            "fieldIds": ["167"]
+        },
+        {
+            "msgType": "J",
+            "fieldIds": ["71"]
+        },
+        {
+            "msgType": "k",
+            "fieldIds": ["374"]
+        },
+        {
+            "msgType": "o",
+            "fieldIds": ["514"]
+        },
+        {
+            "msgType": "p",
+            "fieldIds": ["514"]
+        },
+        {
+            "msgType": "AE",
+            "fieldIds": ["487"]
+        },
+        {
+            "msgType": "AK",
+            "fieldIds": ["666"]
+        },
+        {
+            "msgType": "AL",
+            "fieldIds": ["709"]
+        },
+        {
+            "msgType": "AM",
+            "fieldIds": ["709"]
+        },
+        {
+            "msgType": "AS",
+            "fieldIds": ["71"]
+        },
+        {
+            "msgType": "AY",
+            "fieldIds": ["903"]
+        },
+        {
+            "msgType": "AZ",
+            "fieldIds": ["905"]
+        },
+        {
+            "msgType": "DF",
+            "fieldIds": ["2320"]
+        },
+        {
+            "msgType": "DG",
+            "fieldIds": ["2320"]
+        },
+        {
+            "msgType": "DL",
+            "fieldIds": ["2439"]
+        },
+        {
+            "msgType": "DM",
+            "fieldIds": ["2439"]
+        },
+        {
+            "msgType": "DN",
+            "fieldIds": ["2439"]
+        }
+    ]
+}
