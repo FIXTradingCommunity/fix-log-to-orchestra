@@ -20,9 +20,9 @@ export default class Log2Orchestra {
     private referenceFile: File;
     private orchestraFileName: string;
     private logFiles: FileList;
-    private configurationFile: File;
+    private configurationFile: File | undefined;
 
-    constructor(referenceFile: File, logFiles: FileList, configurationFile: File, orchestraFileName: string, appendOnly: boolean, inputProgress: HTMLElement | null, outputProgress: HTMLElement | null, logProgress: HTMLElement | null, configProgress: HTMLElement | null,
+    constructor(referenceFile: File, logFiles: FileList, configurationFile: File | undefined, orchestraFileName: string, appendOnly: boolean, inputProgress: HTMLElement | null, outputProgress: HTMLElement | null, logProgress: HTMLElement | null, configProgress: HTMLElement | null,
         progressFunc: (progressNode: HTMLElement, percent: number) => void) {
         this.referenceFile = referenceFile;
         this.logFiles = logFiles;
@@ -36,7 +36,7 @@ export default class Log2Orchestra {
         this.progressFunc = progressFunc;
     }
 
-    async run(): Promise<void> {
+    async run(): Promise<Blob> {
         const input = new OrchestraFile(this.referenceFile, this.appendOnly, this.inputProgress, this.progressFunc);
         // read local reference Orchestra file
         await input.readFile();
@@ -76,6 +76,9 @@ export default class Log2Orchestra {
         output.updateDomFromModel(logModel, this.outputProgress);
         this.blob = output.contents();
 
+        return new Promise<Blob>(resolve => {
+            resolve(this.blob);
+        });
     }
 
     /**

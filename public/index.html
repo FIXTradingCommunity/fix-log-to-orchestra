@@ -1,57 +1,40 @@
-﻿<!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="utf-8" />
-	<title>FIX Log to Orchestra</title>
-	<link rel="stylesheet" href="%PUBLIC_URL%/log2orchestra.css" type="text/css" />
-	<!--
-	      manifest.json provides metadata used when your web app is added to the
-	      homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
-	    -->
-	<link rel="manifest" href="%PUBLIC_URL%/manifest.json">
-</head>
-<body>
-	<noscript>
-		You need to enable JavaScript to run this app.
-	</noscript>
-	<img src="FIXorchestraLogo.png" alt="FIX Orchestra" width="200">
-	<h1>FIX Log to Orchestra</h1>
-	<h3>Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
-	<div class="container">
-		<div class="field">
-			<label for="inputFile">Reference Orchestra file</label><br />
-			<input type="file" id="inputFile" accept=".xml" onchange="inputOrchestra(event)">
-			<div class="bar">
-				<div id="inputFileBar" class="progressBar"></div>
-			</div>
-		</div>
-		<div class="field">
-			<label for="logFile">FIX messsage log files</label><br />
-			<input type="file" id="logFile" multiple="multiple" onchange="inputLogs(event)">
-			<div class="bar">
-				<div id="logFileBar" class="progressBar"></div>
-			</div>
-		</div>
-		<div class="field">
-			<label for="inputFile">Configuration file for scenarios (optional)</label><br />
-			<input type="file" id="configurationFile" accept=".json" onchange="inputConfiguration(event)">
-			<div class="bar">
-				<div id="configurationFileBar" class="progressBar"></div>
-			</div>
-		</div>
-		<div class="field">
-			<label for="outputFile">Orchestra file to create</label><br />
-			<input type="text" id="outputFile" value="myorchestra.xml" placeholder="Orchestra file name" onchange="outputOrchestra(event)">
-			<div class="bar">
-				<div id="outputFileBar" class="progressBar"></div>
-			</div>
-		</div>
-		<div>
-			<input type="checkbox" id="appendCheckbox" onchange="appendToggle(event)" />
-			<label for="appendCheckbox">Append only (removes no scenarios)</label><br />
-		</div>
-		<button type="button" id="createButton" onclick="createOrchestra(event)">Create Orchestra file</button><output id="output"></output>
-	</div>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="%PUBLIC_URL%/fixorchestralogo_OKR_icon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <!--
+      manifest.json provides metadata used when your web app is added to the
+      homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>Log to Orchestra</title>
+  </head>
+  <body>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
 </html>
