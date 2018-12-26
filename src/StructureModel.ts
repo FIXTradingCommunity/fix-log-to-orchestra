@@ -13,7 +13,7 @@ export interface Usable {
     readonly uses: number;
 
     /**
-     * Increments the count
+     * Increments the use count
      */
     use(): void;
 }
@@ -65,7 +65,6 @@ export function PresencefromString(str: string): Presence {
     }
 }
 
-
 export abstract class StructureModel implements Keyed, Usable {
     static readonly defaultScenario = "base";
     readonly id: string;
@@ -88,17 +87,20 @@ export abstract class StructureModel implements Keyed, Usable {
         }
     }
     /**
-     * Key combines the name and scenario of this object
+     * Combines the name and scenario name of a StructureModel to produce a unique key
      */
     static key(name: string, scenario: string): string {
         return name + "." + scenario;
     }
+    /**
+     * Key of this object
+     */
     key(): string {
         return StructureModel.key(this.name, this.scenario);
     }
     /**
      * Copy this member for a different scenario, with uses set to zero
-     * @param scenario new scenario
+     * @param scenario new scenario name
      */
     abstract clone(scenario: string): StructureModel;
     addMember(member: StructureMember): void {
@@ -106,6 +108,9 @@ export abstract class StructureModel implements Keyed, Usable {
         member.parent = this;
     }
 
+    /**
+     * Increment use count
+     */
     use(): void {
         this.uses++;
     }

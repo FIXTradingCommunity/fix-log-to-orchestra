@@ -8,7 +8,8 @@ export type messageScenarioKeysType = { "keys": { "msgType": string; "fieldIds":
  */
 export default class ConfigurationFile {
     static readonly MIME_TYPE: string = "application/json";
-    private keys: messageScenarioKeysType = defaultMessageScenarioKeys;
+    static readonly defaultKeys: messageScenarioKeysType =  defaultMessageScenarioKeys;
+    private keys: messageScenarioKeysType | undefined;
     private file: File;
     private progressNode: HTMLElement | null;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
@@ -18,7 +19,7 @@ export default class ConfigurationFile {
         this.progressNode = progressNode;
         this.progressFunc = progressFunc;
     }
-    get messageScenarioKeys(): messageScenarioKeysType {
+    get messageScenarioKeys(): messageScenarioKeysType | undefined {
         return this.keys;
     }
     get size(): number {

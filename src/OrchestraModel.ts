@@ -1,6 +1,6 @@
 import CodesetModel, { CodeModel } from "./CodesetModel";
 import { FieldInstance } from "./MessageInstance";
-import MessageModel, { ComponentModel, FieldModel, FieldRef, GroupModel } from "./MessageModel";
+import MessageModel, { ComponentModel, FieldModel, FieldRef, GroupModel, ComponentRef, GroupRef } from "./MessageModel";
 import { StructureModel } from "./StructureModel";
 
 /**
@@ -14,6 +14,8 @@ export default class OrchestraModel {
     readonly groups: GroupsModel = new GroupsModel();
     readonly messages: MessagesModel = new MessagesModel();
     constructor() {
+        ComponentRef.componentsModel = this.components;
+        GroupRef.groupsModel = this.groups;
     }
     /**
      * Generate a scenario name from key field values assuming that the fields have an associated codeset.

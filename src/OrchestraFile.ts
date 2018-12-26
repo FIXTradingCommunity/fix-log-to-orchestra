@@ -394,9 +394,9 @@ export default class OrchestraFile {
                                     }
                                     break;
                             }
-                        }
-                        if (childElement) {
-                            childElement = childElement.nextElementSibling;
+                            if (childElement) {
+                                childElement = childElement.nextElementSibling;
+                            }
                         }
                     }
                 }
@@ -440,26 +440,26 @@ export default class OrchestraFile {
                 codesetElement.setAttribute("supported", "supported");
             }
             else if (!this.appendOnly) {
-                codesetElement.setAttribute("supported", "ignored");
+                codesetsElement.removeChild(codesetElement);
             }
-            const codeNodes = codesetElement.getElementsByTagName("fixr:code");
+            const codeElements: HTMLCollectionOf<Element> = codesetElement.getElementsByTagName("fixr:code");
             let domCodeValues: string[] = [];
-            for (let i: number = 0; i < codeNodes.length; i++) {
-                const value: string | null = codeNodes[i].getAttribute("value");
+            for (let i: number = 0; i < codeElements.length; i++) {
+                const value: string | null = codeElements[i].getAttribute("value");
                 if (value) {
                     domCodeValues.push(value);
                 }
             }
             if (usedCodes.length > 0) {
-                for (let i: number = 0; i < codeNodes.length; i++) {
-                    const value: string | null = codeNodes[i].getAttribute("value");
+                for (let i: number = 0; i < codeElements.length; i++) {
+                    const value: string | null = codeElements[i].getAttribute("value");
                     if (value) {
                         const code: CodeModel | undefined = codeset.getByValue(value);
                         if (code && code.uses > 0) {
-                            codeNodes[i].setAttribute("supported", "supported");
+                            codeElements[i].setAttribute("supported", "supported");
                         }
-                        else {
-                            codeNodes[i].setAttribute("supported", "forbidden");
+                        else if (!this.appendOnly) {
+                            codesetElement.removeChild(codeElements[i]);
                         }
                     }
                 }
@@ -507,7 +507,7 @@ export default class OrchestraFile {
                 fieldElement.setAttribute("supported", "supported");
             }
             else if (!this.appendOnly) {
-                fieldElement.setAttribute("supported", "ignored");
+                fieldsElement.removeChild(fieldElement);
             }
         });
     }
@@ -538,15 +538,15 @@ export default class OrchestraFile {
             if (component.uses > 0) {
                 componentElement.setAttribute("supported", "supported");
             }
-            else {
-                componentElement.setAttribute("supported", "ignored");
+            else if (!this.appendOnly) {
+                componentsElement.removeChild(componentElement);
             }
         });
     }
     private addDomGroups(groupsModel: GroupsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const groupsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        const componentsElement: Element = groupsSnapshot.snapshotItem(0) as Element;
+        const groupsElement: Element = groupsSnapshot.snapshotItem(0) as Element;
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         groupsModel.forEach((group: GroupModel) => {
             let groupElement: Element | null = null;
@@ -564,14 +564,14 @@ export default class OrchestraFile {
                 groupElement.setAttribute("name", group.name);
                 groupElement.setAttribute("scenario", group.scenario);
                 groupElement.setAttribute("id", group.id);
-                componentsElement.appendChild(groupElement);
+                groupsElement.appendChild(groupElement);
                 this.addMembers(groupElement, group);
             }
             if (group.uses > 0) {
                 groupElement.setAttribute("supported", "supported");
             }
-            else {
-                groupElement.setAttribute("supported", "ignored");
+            else if (!this.appendOnly) {
+                groupsElement.removeChild(groupElement);
             }
         });
     }

@@ -79,9 +79,13 @@ export default class MessageModel extends BaseStructureModel {
         this.msgType = msgType;
     }
     clone(scenario: string): MessageModel {
-        const clone = new MessageModel(this.id, this.name, this.msgType, scenario);
-        this.members.forEach(m => clone.addMember(m.clone(scenario)));
-        return clone;
+        if (scenario === this.scenario) {
+            return this;
+        } else {
+            const clone = new MessageModel(this.id, this.name, this.msgType, scenario);
+            this.members.forEach(m => clone.addMember(m.clone(scenario)));
+            return clone;
+        }
     }
     get keyFields(): FieldInstance[] | undefined {
         return this.keys;
@@ -100,8 +104,8 @@ export class ComponentModel extends BaseStructureModel {
     }
 
     clone(scenario: string): ComponentModel {
-        // special case: do not clone standard header or trailer
-        if (this.id === ComponentModel.standardHeaderId || this.id === ComponentModel.standardTrailerId) {
+        // special case: do not clone standard header or trailer or same scenario
+        if (this.id === ComponentModel.standardHeaderId || this.id === ComponentModel.standardTrailerId || scenario === this.scenario) {
             return this;
         } else {
             const clone = new ComponentModel(this.id, this.name, scenario);
@@ -122,9 +126,13 @@ export class GroupModel extends BaseStructureModel {
     }
 
     clone(scenario: string): GroupModel {
-        const clone = new GroupModel(this.id, this.name, this.numInGroup, scenario);
-        this.members.forEach(m => clone.addMember(m.clone(scenario)));
-        return clone;
+        if (scenario === this.scenario) {
+            return this;
+        } else {
+            const clone = new GroupModel(this.id, this.name, this.numInGroup, scenario);
+            this.members.forEach(m => clone.addMember(m.clone(scenario)));
+            return clone;
+        }
     }
 
     findFieldRef(id: string): FieldContext | undefined {
@@ -174,8 +182,12 @@ export class FieldModel implements Keyed, Usable {
    * @returns a new FieldModel
    */
     clone(scenario: string): FieldModel {
-        const clone = new FieldModel(this.id, this.name, this.datatype, scenario);
-        return clone;
+        if (scenario === this.scenario) {
+            return this;
+        } else {
+            const clone = new FieldModel(this.id, this.name, this.datatype, scenario);
+            return clone;
+        }
     }
 
     use() {

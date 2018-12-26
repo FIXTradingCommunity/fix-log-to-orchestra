@@ -58,18 +58,21 @@ export default class Log2Orchestra {
         // clones reference dom to output file
         output.dom = input.cloneDom();
 
-        // read and parse one or more FIX logs 
         const logModel: LogModel = new LogModel(referenceModel);
-        for (let i = 0; i < this.logFiles.length; i++) {
-            const logReader: LogReader = new LogReader(this.logFiles[i], logModel.messageListener, this.logProgress, this.progressFunc);
-            await logReader.readFile();
-        }
 
         // if a configuration file was selected, read it. Otherwise, use default configuration to differentiate message scenarios.
         if (this.configurationFile) {
             const config = new ConfigurationFile(this.configurationFile, this.configProgress, this.progressFunc);
             await config.readFile();
             logModel.messageScenarioKeys = config.messageScenarioKeys;
+        } else {
+            logModel.messageScenarioKeys = ConfigurationFile.defaultKeys;
+        }
+
+        // read and parse one or more FIX logs 
+        for (let i = 0; i < this.logFiles.length; i++) {
+            const logReader: LogReader = new LogReader(this.logFiles[i], logModel.messageListener, this.logProgress, this.progressFunc);
+            await logReader.readFile();
         }
 
         // update the output Orchestra file from the model
