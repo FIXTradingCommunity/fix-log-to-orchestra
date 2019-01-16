@@ -42,7 +42,7 @@ export default class App extends Component {
     }
   };
   private outputOrchestra = (fileName: string | undefined): void => {
-      this.orchestraFileName = fileName;
+    this.orchestraFileName = fileName;
   };
   private appendToggle = (checked: boolean): void => {
     this.appendOnly = checked;
@@ -78,13 +78,23 @@ export default class App extends Component {
       this.setState({ showAlerts: false });
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
-      const contents: Blob | undefined = await runner.run();
-      if (contents) {
-        this.createLink(contents);
+      try {
+        await runner.run();
+      } catch (error) {
+        if (error instanceof Error && error.stack) {
+          this.alertMsg = error.stack;
+        } else if (error) {
+          this.alertMsg = error;
+        }
+        this.setState({ showAlerts: true });
+      }
+
+      if (runner.contents) {
+        this.createLink(runner.contents);
       }
     } else {
       this.alertMsg = this.createErrorMsgs();
-      this.setState( {showAlerts: true} );
+      this.setState({ showAlerts: true });
     }
   }
 

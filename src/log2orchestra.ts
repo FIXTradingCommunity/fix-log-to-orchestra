@@ -2,7 +2,7 @@
  * Copyright 2019, FIX Protocol Ltd.
  */
 
- import ConfigurationFile from "./ConfigurationFile";
+import ConfigurationFile from "./ConfigurationFile";
 import LogModel from "./LogModel";
 import LogReader from "./LogReader";
 import { ComponentRef, GroupRef } from "./MessageModel";
@@ -41,51 +41,56 @@ export default class Log2Orchestra {
     }
 
     async run(): Promise<Blob> {
-        const input = new OrchestraFile(this.referenceFile, this.appendOnly, this.inputProgress, this.progressFunc);
-        // read local reference Orchestra file
-        await input.readFile();
+        try {
+            const input = new OrchestraFile(this.referenceFile, this.appendOnly, this.inputProgress, this.progressFunc);
+            // read local reference Orchestra file
+            await input.readFile();
 
-        // populate model from reference Orchestra file
-        const referenceModel: OrchestraModel = new OrchestraModel();
-        input.extractOrchestraModel(referenceModel);
-        ComponentRef.componentsModel = referenceModel.components;
-        GroupRef.groupsModel = referenceModel.groups;
+            // populate model from reference Orchestra file
+            const referenceModel: OrchestraModel = new OrchestraModel();
+            input.extractOrchestraModel(referenceModel);
+            ComponentRef.componentsModel = referenceModel.components;
+            GroupRef.groupsModel = referenceModel.groups;
 
-        // it takes a bit of a data dictionary to parse FIX; inform FIX parser of special fields
-        const lengthFieldIds: string[] = referenceModel.fields.getIdsByDatatype("Length");
-        // tag 9 is of Length type but is message length, not field length, so remove it from special fields for field parser
-        lengthFieldIds.splice(lengthFieldIds.indexOf("9"), 1);
-        TVFieldParser.lengthFieldIds = lengthFieldIds;
+            // it takes a bit of a data dictionary to parse FIX; inform FIX parser of special fields
+            const lengthFieldIds: string[] = referenceModel.fields.getIdsByDatatype("Length");
+            // tag 9 is of Length type but is message length, not field length, so remove it from special fields for field parser
+            lengthFieldIds.splice(lengthFieldIds.indexOf("9"), 1);
+            TVFieldParser.lengthFieldIds = lengthFieldIds;
 
-        // create new Orchestra file for output
-        const output = new OrchestraFile(new File([""], this.orchestraFileName), this.appendOnly, this.outputProgress, this.progressFunc);
-        // clones reference dom to output file
-        output.dom = input.cloneDom();
+            // create new Orchestra file for output
+            const output = new OrchestraFile(new File([""], this.orchestraFileName), this.appendOnly, this.outputProgress, this.progressFunc);
+            // clones reference dom to output file
+            output.dom = input.cloneDom();
 
-        const logModel: LogModel = new LogModel(referenceModel);
+            const logModel: LogModel = new LogModel(referenceModel);
 
-        // if a configuration file was selected, read it. Otherwise, use default configuration to differentiate message scenarios.
-        if (this.configurationFile) {
-            const config = new ConfigurationFile(this.configurationFile, this.configProgress, this.progressFunc);
-            await config.readFile();
-            logModel.messageScenarioKeys = config.messageScenarioKeys;
-        } else {
-            logModel.messageScenarioKeys = ConfigurationFile.defaultKeys;
+            // if a configuration file was selected, read it. Otherwise, use default configuration to differentiate message scenarios.
+            if (this.configurationFile) {
+                const config = new ConfigurationFile(this.configurationFile, this.configProgress, this.progressFunc);
+                await config.readFile();
+                logModel.messageScenarioKeys = config.messageScenarioKeys;
+            } else {
+                logModel.messageScenarioKeys = ConfigurationFile.defaultKeys;
+            }
+
+            // read and parse one or more FIX logs 
+            for (let i = 0; i < this.logFiles.length; i++) {
+                const logReader: LogReader = new LogReader(this.logFiles[i], logModel.messageListener, this.logProgress, this.progressFunc);
+                await logReader.readFile();
+            }
+
+            // update the output Orchestra file from the model
+            output.updateDomFromModel(logModel, this.outputProgress);
+            this.blob = output.contents();
+            return new Promise<Blob>(resolve =>
+                resolve(this.blob)
+            );
+        } catch (e) {
+            return new Promise<Blob>((resolve, reject) =>
+                reject(e)
+            )
         }
-
-        // read and parse one or more FIX logs 
-        for (let i = 0; i < this.logFiles.length; i++) {
-            const logReader: LogReader = new LogReader(this.logFiles[i], logModel.messageListener, this.logProgress, this.progressFunc);
-            await logReader.readFile();
-        }
-
-        // update the output Orchestra file from the model
-        output.updateDomFromModel(logModel, this.outputProgress);
-        this.blob = output.contents();
-
-        return new Promise<Blob>(resolve => {
-            resolve(this.blob);
-        });
     }
 
     /**

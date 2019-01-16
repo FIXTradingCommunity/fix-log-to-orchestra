@@ -23,9 +23,18 @@ export default class OrchestraFile {
         this.progressFunc = progressFunc;
         this.appendOnly = appendOnly;
     }
-    static parse(xml: string): Document {
+    static parse(xml: string): Document | null {
         const parser = new DOMParser();
-        return parser.parseFromString(xml, OrchestraFile.MIME_TYPE);
+        // test namespace of parseerror since it's different between browsers
+        let parsererrorNS: string | null = parser.parseFromString('INVALID', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
+        let doc: Document = parser.parseFromString(xml, OrchestraFile.MIME_TYPE);
+        if (parsererrorNS && doc.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0) {
+            return null;
+        } else if (!parsererrorNS && doc.getElementsByTagName('parsererror').length > 0) {
+            return null;
+        } else {
+            return doc;
+        }
     }
     static serialize(document: Document): string {
         const serializer = new XMLSerializer();
@@ -63,12 +72,25 @@ export default class OrchestraFile {
                 }
                 const res = reader.result;
                 if (typeof res === "string") {
-                    this.dom = OrchestraFile.parse(res);
+                    let dom: Document | null = OrchestraFile.parse(res);
+                    if (dom) {
+                        this.dom = dom;
+                        resolve();
+                    } else {
+                        reject(new Error("Error parsing XML"));
+                    }
                 }
                 else if (res) {
-                    this.dom = OrchestraFile.parse(res.toString());
+                    let dom: Document | null = OrchestraFile.parse(res.toString());
+                    if (dom) {
+                        this.dom = dom;
+                        resolve();
+                    } else {
+                        reject(new Error("Error parsing XML"));
+                    }
+                } else {
+                    reject("Failed to read XML file; possibly empty");
                 }
-                resolve();
             };
             reader.onerror = () => {
                 if (this.progressNode) {
@@ -85,6 +107,7 @@ export default class OrchestraFile {
             reader.readAsText(this.file);
         });
     }
+
     updateDomFromModel(logModel: LogModel, progressNode: HTMLElement | null): void {
         this.updateDomMetadata();
         this.updateDomCodes(logModel.model.codesets);
