@@ -1,3 +1,7 @@
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
 /**
  * A FIX tag-value message
  */

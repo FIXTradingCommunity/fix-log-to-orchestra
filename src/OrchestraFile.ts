@@ -1,3 +1,7 @@
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
 import CodesetModel, { CodeModel } from "./CodesetModel";
 import LogModel from "./LogModel";
 import MessageModel, { ComponentModel, ComponentRef, FieldContext, FieldModel, FieldRef, GroupModel, GroupRef } from "./MessageModel";

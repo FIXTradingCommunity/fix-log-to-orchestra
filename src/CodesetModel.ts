@@ -1,4 +1,8 @@
-import { IsSupported, Keyed, Usable } from "./StructureModel";
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
+ import { IsSupported, Keyed, Usable } from "./StructureModel";
 
 /**
  * Model of codesets and codes

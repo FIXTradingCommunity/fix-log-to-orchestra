@@ -1,3 +1,7 @@
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 

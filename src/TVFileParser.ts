@@ -1,3 +1,7 @@
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
 /**
  * Parses FIX tag-value fields
  */

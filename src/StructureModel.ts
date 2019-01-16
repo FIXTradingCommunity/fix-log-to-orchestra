@@ -1,4 +1,8 @@
-/**
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
+ /**
  * Produce a string to be used as a key in keyed collection such as Map and Set
  */
 export interface Keyed {

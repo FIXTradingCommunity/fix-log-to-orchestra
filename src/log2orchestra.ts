@@ -1,4 +1,8 @@
-import ConfigurationFile from "./ConfigurationFile";
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
+ import ConfigurationFile from "./ConfigurationFile";
 import LogModel from "./LogModel";
 import LogReader from "./LogReader";
 import { ComponentRef, GroupRef } from "./MessageModel";

@@ -1,3 +1,7 @@
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import TVFileParser, { TVFieldParser, TVMessageParser } from "./TVFileParser";
 

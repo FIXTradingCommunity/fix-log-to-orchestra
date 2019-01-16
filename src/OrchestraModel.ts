@@ -1,4 +1,8 @@
-import CodesetModel, { CodeModel } from "./CodesetModel";
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
+ import CodesetModel, { CodeModel } from "./CodesetModel";
 import { FieldInstance } from "./MessageInstance";
 import MessageModel, { ComponentModel, FieldModel, FieldRef, GroupModel, ComponentRef, GroupRef } from "./MessageModel";
 import { StructureModel } from "./StructureModel";

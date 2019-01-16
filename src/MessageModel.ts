@@ -1,3 +1,7 @@
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
 import CodesetModel from "./CodesetModel";
 import { FieldInstance } from "./MessageInstance";
 import { ComponentsModel, GroupsModel } from "./OrchestraModel";

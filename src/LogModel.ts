@@ -1,4 +1,8 @@
-import CodesetModel, { CodeModel } from "./CodesetModel";
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
+ import CodesetModel, { CodeModel } from "./CodesetModel";
 import { messageScenarioKeysType } from "./ConfigurationFile";
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import MessageModel, { FieldContext, FieldModel, FieldRef } from "./MessageModel";

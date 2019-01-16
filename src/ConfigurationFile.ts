@@ -1,4 +1,8 @@
-import defaultMessageScenarioKeys from "./defaultMessageScenarioKeys.json";
+/*!
+ * Copyright 2019, FIX Protocol Ltd.
+ */
+
+ import defaultMessageScenarioKeys from "./defaultMessageScenarioKeys.json";
 
 export type messageScenarioKeysType = { "keys": { "msgType": string; "fieldIds": string[]; }[]; };
 
