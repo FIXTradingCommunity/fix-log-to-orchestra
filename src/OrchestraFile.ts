@@ -497,6 +497,7 @@ export default class OrchestraFile {
                 if (code) {
                     const codeElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:code");
                     codeElement.setAttribute("name", code.name);
+                    codeElement.setAttribute("id", code.id);
                     codeElement.setAttribute("value", code.value);
                     codeElement.setAttribute("supported", "supported");
                     if (codesetElement) {

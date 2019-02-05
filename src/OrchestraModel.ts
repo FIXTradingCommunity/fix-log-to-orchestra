@@ -23,8 +23,8 @@ export default class OrchestraModel {
     }
     /**
      * Generate a scenario name from key field values assuming that the fields have an associated codeset.
-     * Format: <field name>=<code name>
-     * If more that one field, then repeat format with ":" delimiter.
+     * Format: <field name>-<code name>
+     * If more that one field, then repeat format with "_" delimiter.
      * If keyFields is empty, then return default scenario name "base".
      * Example: ExecType=Canceled
      * @param keyFields array of tag-value fields
@@ -42,10 +42,10 @@ export default class OrchestraModel {
                 if (codeset && fieldInstance.value) {
                     const code: CodeModel | undefined = codeset.getByValue(fieldInstance.value);
                     if (scenarioName.length > 0) {
-                        scenarioName += ":";
+                        scenarioName += "_";
                     }
                     scenarioName += field.name;
-                    scenarioName += "=";
+                    scenarioName += "-";
                     if (code) {
                         scenarioName += code.name;
                     }
