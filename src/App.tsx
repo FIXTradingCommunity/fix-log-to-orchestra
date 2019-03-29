@@ -177,7 +177,7 @@ export default class App extends Component {
             </div>
           </div>
           <div className="field">
-            <label htmlFor="outputFile">Orchestra file to create</label><br />
+            <label htmlFor="outputFile">Orchestra file to create (*.xml)</label><br />
             <input type="text" id="outputFile" defaultValue={this.orchestraFileName} placeholder="Orchestra file name" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}></input>
             <div className="bar">
               <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
