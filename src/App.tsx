@@ -77,7 +77,7 @@ export default class App extends Component {
   private async createOrchestra(): Promise<void> {
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
-      this.setState({ showAlerts: false, showHelp: false});
+      this.setState({ showAlerts: false, showHelp: false });
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
       try {
@@ -149,54 +149,56 @@ export default class App extends Component {
   render() {
     return (
       <div className="App">
-        <header className="App-header">
+        <div className="App-header">
           <img src={logo} className="App-logo" alt="FIX Orchestra" />
-        </header>
-        <h1>FIX Log to Orchestra</h1>
-        <h3>Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
-        {App.versionMsg}<br />
-        {App.rightsMsg}<br />
-        <div className="container">
-          <div className="field">
-            <label htmlFor="inputFile">Reference Orchestra file</label><br />
-            <input type="file" id="inputFile" accept=".xml" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputOrchestra(e.target.files)}></input>
-            <div className="bar">
-              <div id="inputFileBar" className="progressBar" ref={this.setInputFileBarRef}></div>
-            </div>
-          </div>
-          <div className="field">
-            <label htmlFor="logFile">FIX messsage log files</label><br />
-            <input type="file" id="logFile" multiple={true} onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputLogs(e.target.files)}></input>
-            <div className="bar">
-              <div id="logFileBar" className="progressBar" ref={this.setLogFileBarRef}></div>
-            </div>
-          </div>
-          <div className="field">
-            <label htmlFor="inputFile">Configuration file for scenarios (optional)</label><br />
-            <input type="file" id="configurationFile" accept=".json" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputConfiguration(e.target.files)}></input>
-            <div className="bar">
-              <div id="configurationFileBar" className="progressBar" ref={this.setConfigurationFileBarRef}></div>
-            </div>
-          </div>
-          <div className="field">
-            <label htmlFor="outputFile">Orchestra file to create (*.xml)</label><br />
-            <input type="text" id="outputFile" defaultValue={this.orchestraFileName} placeholder="Orchestra file name" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}></input>
-            <div className="bar">
-              <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
-            </div>
-          </div>
-          <div>
-            <input type="checkbox" id="appendCheckbox" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.appendToggle(e.target.checked)}></input>
-            <label htmlFor="appendCheckbox">Append only (removes no scenarios)</label><br />
-          </div>
-          <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
-          <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({showHelp: !this.state.showHelp})}>?</button>
-          <output id="output"></output>
+          <h1>FIX Log to Orchestra</h1>
+          <h3>Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
+          <p>{App.versionMsg}</p>
+          <p>{App.rightsMsg}</p>
         </div>
-        {this.state.showAlerts && <div className="container" id="alerts" >
-          <textarea readOnly className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
-        </div>}
-        {this.state.showHelp && <Help></Help>}
+        <div className="contentContainer">
+          <div className="container">
+            <div className="field">
+              <label htmlFor="inputFile">Reference Orchestra file</label><br />
+              <input type="file" id="inputFile" accept=".xml" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputOrchestra(e.target.files)}></input>
+              <div className="bar">
+                <div id="inputFileBar" className="progressBar" ref={this.setInputFileBarRef}></div>
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="logFile">FIX messsage log files</label><br />
+              <input type="file" id="logFile" multiple={true} onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputLogs(e.target.files)}></input>
+              <div className="bar">
+                <div id="logFileBar" className="progressBar" ref={this.setLogFileBarRef}></div>
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="inputFile">Configuration file for scenarios (optional)</label><br />
+              <input type="file" id="configurationFile" accept=".json" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputConfiguration(e.target.files)}></input>
+              <div className="bar">
+                <div id="configurationFileBar" className="progressBar" ref={this.setConfigurationFileBarRef}></div>
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="outputFile">Orchestra file to create (*.xml)</label><br />
+              <input type="text" id="outputFile" defaultValue={this.orchestraFileName} placeholder="Orchestra file name" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}></input>
+              <div className="bar">
+                <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
+              </div>
+            </div>
+            <div>
+              <input type="checkbox" id="appendCheckbox" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.appendToggle(e.target.checked)}></input>
+              <label htmlFor="appendCheckbox">Append only (removes no scenarios)</label><br />
+            </div>
+            <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
+            <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
+            <output id="output"></output>
+          </div>
+          {this.state.showAlerts && <div className="container" id="alerts" >
+            <textarea readOnly className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
+          </div>}
+          {this.state.showHelp && !this.state.showAlerts && <Help></Help>}
+        </div>
       </div>
     );
   }
