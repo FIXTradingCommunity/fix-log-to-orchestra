@@ -5,6 +5,7 @@
 import React, { Component } from 'react';
 import logo from './FIXorchestraLogo.png';
 import './log2orchestra.css';
+import Help from "./Help";
 import Log2Orchestra from "./Log2Orchestra";
 import OrchestraFile from "./OrchestraFile";
 import { resolve } from 'dns';
@@ -25,7 +26,8 @@ export default class App extends Component {
   private configurationProgress: HTMLElement | undefined = undefined;
   private alertMsg: string = "";
 
-  state = { showAlerts: false }
+  state = { showAlerts: false, showHelp: false }
+
   private inputOrchestra = (fileList: FileList | null): void => {
     if (fileList && fileList.length > 0) {
       this.referenceFile = fileList[0];
@@ -75,7 +77,7 @@ export default class App extends Component {
   private async createOrchestra(): Promise<void> {
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
-      this.setState({ showAlerts: false });
+      this.setState({ showAlerts: false, showHelp: false});
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
       try {
@@ -188,11 +190,13 @@ export default class App extends Component {
             <label htmlFor="appendCheckbox">Append only (removes no scenarios)</label><br />
           </div>
           <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
+          <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({showHelp: !this.state.showHelp})}>?</button>
           <output id="output"></output>
         </div>
         {this.state.showAlerts && <div className="container" id="alerts" >
           <textarea readOnly className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
         </div>}
+        {this.state.showHelp && <Help></Help>}
       </div>
     );
   }
