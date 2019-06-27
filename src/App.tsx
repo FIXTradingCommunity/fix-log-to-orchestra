@@ -9,12 +9,11 @@ import Help from "./Help";
 import Log2Orchestra from "./Log2Orchestra";
 import OrchestraFile from "./OrchestraFile";
 import { resolve } from 'dns';
+import { version } from '../package.json';
 
 
 export default class App extends Component {
-  static readonly versionMsg: string = "Application version 1.0 / Orchestra version 1.0 RC4";
   static readonly rightsMsg: string = "© Copyright 2019, FIX Protocol Ltd.";
-
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
   private configurationFile: File | undefined = undefined;
@@ -153,7 +152,7 @@ export default class App extends Component {
           <img src={logo} className="App-logo" alt="FIX Orchestra" />
           <h1>FIX Log to Orchestra</h1>
           <h3>Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
-          <p>{App.versionMsg}</p>
+          <p>Version {version}</p>
           <p>{App.rightsMsg}</p>
         </div>
         <div className="contentContainer">
