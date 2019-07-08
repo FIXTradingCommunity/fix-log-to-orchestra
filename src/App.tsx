@@ -177,8 +177,8 @@ export default class App extends Component {
       Utility.Log(e);
 
       window.location.href = "https://fixtrading.xecurify.com/moas/idp/openidsso?" +
-        "client_id=q63H8HNBTq00O4M" +
-        "redirect_uri=https://orchid.fixtrading.org/&" +
+        "client_id=q63H8HNBTq00O4M&" +
+        "redirect_uri=https://log2orchestra.fixtrading.org/&" +
         "scope=profile&" +
         "response_type=token&" +
         "state=123";
