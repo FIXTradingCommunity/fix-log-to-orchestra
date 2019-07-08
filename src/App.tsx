@@ -10,6 +10,10 @@ import Log2Orchestra from "./Log2Orchestra";
 import OrchestraFile from "./OrchestraFile";
 import { resolve } from 'dns';
 import { version } from '../package.json';
+import * as QueryString from 'query-string';
+import * as jwt from 'jsonwebtoken';
+import Utility from './utility';
+import { object } from 'prop-types';
 
 
 export default class App extends Component {
@@ -145,7 +149,45 @@ export default class App extends Component {
     }
   }
 
+  private CheckAuthenticated() {
+    const urlparsed = QueryString.parse(location.search);
+    const id_token = urlparsed.id_token as string;
+
+    try {
+      const decoded: null | object | string = jwt.decode(id_token);
+      if (!decoded) {
+        throw new Error("unauthenticated");
+      }
+      /*if (decoded['exp']) {
+        const sec = decoded['exp'] as number;
+        const date: Date = new Date(0);
+        date.setUTCSeconds(sec);
+        const now: Date = new Date();
+        if (date < now) {
+          throw new Error("expired");
+        }
+      }*/
+
+      const verified: object | string = jwt.verify(id_token, Utility.GetMOPublicKey());
+      if (!verified) {
+        throw new Error("unauthenticated");
+      }
+
+    } catch (e) {
+      Utility.Log(e);
+
+      window.location.href = "https://fixtrading.xecurify.com/moas/idp/openidsso?" +
+        "client_id=q63H8HNBTq00O4M" +
+        "redirect_uri=https://orchid.fixtrading.org/&" +
+        "scope=profile&" +
+        "response_type=token&" +
+        "state=123";
+    }
+  }
+
   render() {
+    this.CheckAuthenticated();
+
     return (
       <div className="App">
         <div className="App-header">
