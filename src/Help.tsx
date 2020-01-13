@@ -9,7 +9,7 @@ export default class Help extends Component {
     
     render() {
         return (
-            <div className="container">
+            <div className="Help-container">
             <h2>Help</h2>
             <h3>Configuration</h3>
             <p>The log2orchestra tool distinguishes message scenarios by a key field in each message type, or a combination of key

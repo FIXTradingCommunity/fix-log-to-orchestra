@@ -6,7 +6,7 @@ import React, { Component } from 'react';
 import logo from './FIXorchestraLogo.png';
 import './log2orchestra.css';
 import Help from "./Help";
-import Log2Orchestra from "./Log2Orchestra";
+import Log2Orchestra from "./log2orchestra";
 import OrchestraFile from "./OrchestraFile";
 import { resolve } from 'dns';
 import { version } from '../package.json';
@@ -150,7 +150,7 @@ export default class App extends Component {
   }
 
   private CheckAuthenticated() {
-    const urlparsed = QueryString.parse(location.search);
+    const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
 
     try {
@@ -190,15 +190,16 @@ export default class App extends Component {
 
     return (
       <div className="App">
-        <div className="App-header">
+        <div className="App-header container">
+          <div className="titleContainer">
+            <h1>FIX Log to Orchestra</h1>
+            <h3 className="subTitle">Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
+          </div>
           <img src={logo} className="App-logo" alt="FIX Orchestra" />
-          <h1>FIX Log to Orchestra</h1>
-          <h3>Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
-          <p>Version {version}</p>
-          <p>{App.rightsMsg}</p>
         </div>
-        <div className="contentContainer">
-          <div className="container">
+        <div className="contentContainer container">
+          <div className="form">
+            <h2>Input</h2>
             <div className="field">
               <label htmlFor="inputFile">Reference Orchestra file</label><br />
               <input type="file" id="inputFile" accept=".xml" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputOrchestra(e.target.files)}></input>
@@ -234,12 +235,19 @@ export default class App extends Component {
             <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
             <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
             <output id="output"></output>
+            {
+              this.state.showAlerts && 
+              <div className="container" id="alerts" >
+                <textarea readOnly className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
+              </div>
+            }
           </div>
-          {this.state.showAlerts && <div className="container" id="alerts" >
-            <textarea readOnly className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
-          </div>}
           {this.state.showHelp && !this.state.showAlerts && <Help></Help>}
         </div>
+        <footer className="container">
+          <p>Version {version}</p>
+          <p>{App.rightsMsg}</p>
+        </footer>
       </div>
     );
   }
