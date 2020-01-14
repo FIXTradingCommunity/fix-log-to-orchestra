@@ -2,6 +2,7 @@
  * Copyright 2019, FIX Protocol Ltd.
  */
 
+import TextField from '@material-ui/core/TextField';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
 import React, { Component } from 'react';
@@ -31,7 +32,7 @@ export default class App extends Component {
   private alertMsg: string = "";
 
   public render() {
-    this.CheckAuthenticated();
+    // this.CheckAuthenticated();
 
     return (
       <div className="App">
@@ -71,9 +72,26 @@ export default class App extends Component {
                 />
               </div>
             </div>
+            <h2>Output</h2>
             <div className="field">
-              <label htmlFor="outputFile">Orchestra file to create (*.xml)</label><br />
-              <input type="text" id="outputFile" defaultValue={this.orchestraFileName} placeholder="Orchestra file name" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}></input>
+              <TextField
+                label="Orchestra file to create (*.xml)"
+                type="text"
+                variant="outlined"
+                defaultValue={this.orchestraFileName}
+                InputProps={{
+                  classes: {
+                    focused: "textField-focused",
+                  }}
+                }
+                InputLabelProps={{
+                  classes: {
+                    focused: "textField-label-focused"
+                  },
+                  shrink: true,
+                }}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}
+              />
               <div className="bar">
                 <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
               </div>
