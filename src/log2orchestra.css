@@ -29,6 +29,7 @@
 
 .subTitle {
     color: #9D9D9D;
+    text-align: left;
 }
 
 .App-link {
@@ -41,6 +42,10 @@ body {
 	color: black;
     min-height: 100%;
     margin: 0;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 label {
@@ -160,6 +165,18 @@ footer p {
     border: none;
     margin-top: 10px;
     margin-bottom: 10px;
+    width: 200px;
+    margin-right: 20px;
+}
+
+.inputsContainer {
+    display: flex;
+}
+
+.fileInput {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .bar {
@@ -183,6 +200,80 @@ footer p {
 .error-message {
   color: red;
   width: 100%
+}
+
+.inputBox {
+    width: 200px;
+    height: 225px;
+    border-radius: 20px;
+    box-shadow: 0px 2px 200px rgba(0, 0, 0, 0.09);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border: 2px solid #FFFFFF;
+}
+
+.inputBox.dragActive {
+    border: 2px solid #009FE3;
+    background-color: rgba(0, 159, 227, 0.1);
+}
+
+.inputBox.inputBoxError {
+    border: 2px solid #FC1E1E;
+    background-color: #FFFFFF;
+}
+
+.inputLabel {
+    text-align: center;
+    color: #0E518A;
+    display: flex;
+    height: 30px;
+    vertical-align: baseline;
+    align-items: center;
+}
+
+.upArrow {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+}
+
+.inputText {
+    font-weight: 100;
+    color: #737373;
+    text-align: center;
+}
+
+.inputContent {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 10px;
+}
+
+.inputTextError {
+    color: #FC1E1E;
+}
+
+.fileName {
+    margin: 0;
+    height: 16px;
+    color: #737373;
+}
+
+.chooseFileButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 28px;
+    padding: 0 30px;
+    background: #009FE3;
+    border-radius: 14px;
+    color: #FFF;
+    cursor: pointer;
 }
 
 @media (min-width: 576px) {
