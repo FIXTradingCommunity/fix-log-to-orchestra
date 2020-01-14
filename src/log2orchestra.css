@@ -259,6 +259,7 @@ footer p {
 }
 
 .fileName {
+    text-align: center;
     margin: 0;
     height: 16px;
     color: #737373;
