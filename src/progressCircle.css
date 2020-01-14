@@ -1,0 +1,39 @@
+.circleSvg {
+  transform: rotate(-90deg);
+}
+
+.circleSvg .circleBackground {
+  stroke-dashoffset: 0;
+  stroke: #C8C8C8;
+  stroke-width: 2px;
+}
+
+.circleSvg .progressBar {
+  stroke-dashoffset: 175.92px;
+  stroke: #009FE3;
+  stroke-width: 2px;
+}
+
+.progressCircleContainer {
+  display: block;
+  height: 70px;
+  width: 70px;
+  border-radius: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progressCircleContainer:after {
+  position: absolute;
+  display: block;
+  height: 70px;
+  width: 70px;
+  left: 0;
+  top: 0;
+  content: attr(data-pct);
+  line-height: 70px;
+  text-align: center;
+  color: #737373;
+}

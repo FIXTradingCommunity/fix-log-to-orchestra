@@ -2,22 +2,23 @@
  * Copyright 2019, FIX Protocol Ltd.
  */
 
+import * as jwt from 'jsonwebtoken';
+import * as QueryString from 'query-string';
 import React, { Component } from 'react';
+import { version } from '../package.json';
+import FileInput from './FileInput';
 import logo from './FIXorchestraLogo.png';
-import './log2orchestra.css';
 import Help from "./Help";
 import Log2Orchestra from "./log2orchestra";
+import './log2orchestra.css';
 import OrchestraFile from "./OrchestraFile";
-import { resolve } from 'dns';
-import { version } from '../package.json';
-import * as QueryString from 'query-string';
-import * as jwt from 'jsonwebtoken';
 import Utility from './utility';
-import { object } from 'prop-types';
 
 
 export default class App extends Component {
-  static readonly rightsMsg: string = "© Copyright 2019, FIX Protocol Ltd.";
+  public static readonly rightsMsg: string = "© Copyright 2019, FIX Protocol Ltd.";
+
+  public state = { showAlerts: false, showHelp: false }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
   private configurationFile: File | undefined = undefined;
@@ -29,7 +30,77 @@ export default class App extends Component {
   private configurationProgress: HTMLElement | undefined = undefined;
   private alertMsg: string = "";
 
-  state = { showAlerts: false, showHelp: false }
+  public render() {
+    this.CheckAuthenticated();
+
+    return (
+      <div className="App">
+        <div className="App-header container">
+          <div className="titleContainer">
+            <h1>FIX Log to Orchestra</h1>
+            <h3 className="subTitle">Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
+          </div>
+          <img src={logo} className="App-logo" alt="FIX Orchestra" />
+        </div>
+        <div className="contentContainer container">
+          <div className="form">
+            <h2>Input</h2>
+            <div className="inputsContainer">
+              <div className="field">
+                <FileInput
+                  label="Reference Orchestra file"
+                  accept=".xml"
+                  onChange={this.inputOrchestra}
+                  ref={this.setInputFileBarRef as () => {}}
+                />
+              </div>
+              <div className="field">
+                <FileInput
+                  label="FIX messsage log files"
+                  onChange={this.inputLogs}
+                  ref={this.setLogFileBarRef as () => {}}
+                  multiple={true}
+                />
+              </div>
+              <div className="field">
+                <FileInput
+                  label="Configuration file for scenarios (optional)"
+                  accept=".json"
+                  onChange={this.inputConfiguration}
+                  ref={this.setConfigurationFileBarRef as () => {}}
+                />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="outputFile">Orchestra file to create (*.xml)</label><br />
+              <input type="text" id="outputFile" defaultValue={this.orchestraFileName} placeholder="Orchestra file name" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}></input>
+              <div className="bar">
+                <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
+              </div>
+            </div>
+            <div>
+              <input type="checkbox" id="appendCheckbox" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.appendToggle(e.target.checked)}></input>
+              <label htmlFor="appendCheckbox">Append only (removes no scenarios)</label><br />
+            </div>
+            <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
+            <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
+            <output id="output"></output>
+            {
+              this.state.showAlerts && 
+              <div className="container" id="alerts" >
+                <textarea readOnly={true} className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
+              </div>
+            }
+          </div>
+          {this.state.showHelp && !this.state.showAlerts && <Help />}
+        </div>
+        <footer className="container">
+          <p>Version {version}</p>
+          <p>{App.rightsMsg}</p>
+        </footer>
+      </div>
+    );
+  }
 
   private inputOrchestra = (fileList: FileList | null): void => {
     if (fileList && fileList.length > 0) {
@@ -67,9 +138,11 @@ export default class App extends Component {
   };
   private showProgress(progressNode: HTMLElement, percent: number): void {
     if (percent >= 0) {
-      const percentString: string = Math.floor(percent).toString() + "%";
-      progressNode.style.width = percentString;
-      progressNode.innerHTML = percentString;
+
+      if (progressNode instanceof FileInput) {
+        progressNode.setProgress(percent);
+      }
+
     } else {
       progressNode.style.backgroundColor = "red";
     }
@@ -104,7 +177,7 @@ export default class App extends Component {
   }
 
   private createErrorMsgs(): string {
-    let errorMsgs = new Array<string>();
+    const errorMsgs = new Array<string>();
     if (!this.referenceFile) {
       errorMsgs.push("Reference Orchestra file not selected");
     }
@@ -183,72 +256,5 @@ export default class App extends Component {
         "response_type=token&" +
         "state=123";
     }
-  }
-
-  render() {
-    this.CheckAuthenticated();
-
-    return (
-      <div className="App">
-        <div className="App-header container">
-          <div className="titleContainer">
-            <h1>FIX Log to Orchestra</h1>
-            <h3 className="subTitle">Creates an Orchestra file from one or more FIX message logs (tag-value encoding)</h3>
-          </div>
-          <img src={logo} className="App-logo" alt="FIX Orchestra" />
-        </div>
-        <div className="contentContainer container">
-          <div className="form">
-            <h2>Input</h2>
-            <div className="field">
-              <label htmlFor="inputFile">Reference Orchestra file</label><br />
-              <input type="file" id="inputFile" accept=".xml" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputOrchestra(e.target.files)}></input>
-              <div className="bar">
-                <div id="inputFileBar" className="progressBar" ref={this.setInputFileBarRef}></div>
-              </div>
-            </div>
-            <div className="field">
-              <label htmlFor="logFile">FIX messsage log files</label><br />
-              <input type="file" id="logFile" multiple={true} onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputLogs(e.target.files)}></input>
-              <div className="bar">
-                <div id="logFileBar" className="progressBar" ref={this.setLogFileBarRef}></div>
-              </div>
-            </div>
-            <div className="field">
-              <label htmlFor="inputFile">Configuration file for scenarios (optional)</label><br />
-              <input type="file" id="configurationFile" accept=".json" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.inputConfiguration(e.target.files)}></input>
-              <div className="bar">
-                <div id="configurationFileBar" className="progressBar" ref={this.setConfigurationFileBarRef}></div>
-              </div>
-            </div>
-            <div className="field">
-              <label htmlFor="outputFile">Orchestra file to create (*.xml)</label><br />
-              <input type="text" id="outputFile" defaultValue={this.orchestraFileName} placeholder="Orchestra file name" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}></input>
-              <div className="bar">
-                <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
-              </div>
-            </div>
-            <div>
-              <input type="checkbox" id="appendCheckbox" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.appendToggle(e.target.checked)}></input>
-              <label htmlFor="appendCheckbox">Append only (removes no scenarios)</label><br />
-            </div>
-            <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
-            <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
-            <output id="output"></output>
-            {
-              this.state.showAlerts && 
-              <div className="container" id="alerts" >
-                <textarea readOnly className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
-              </div>
-            }
-          </div>
-          {this.state.showHelp && !this.state.showAlerts && <Help></Help>}
-        </div>
-        <footer className="container">
-          <p>Version {version}</p>
-          <p>{App.rightsMsg}</p>
-        </footer>
-      </div>
-    );
   }
 }
