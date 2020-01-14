@@ -28,7 +28,6 @@ class FileInput extends Component<Props> {
           {({ getRootProps, getInputProps, isDragActive, draggedFiles }) => {
             
             const isValidFileType = this.isValidType(draggedFiles[0]);
-
             const fileType = draggedFiles[0] && draggedFiles[0].type.split("/")[1]
 
             return (
@@ -49,7 +48,7 @@ class FileInput extends Component<Props> {
                           {
                             isValidFileType ?
                             <p className="inputText">Drop your Reference Orchestra file here</p> :
-                            <p className="inputText inputTextError">{fileType} is not allowed</p>
+                            <p className="inputText inputTextError">{fileType || "This file type" } is not allowed</p>
                           }
                         </div>
                       </>
@@ -76,6 +75,8 @@ class FileInput extends Component<Props> {
   public isValidType = (file: File | undefined) => {
     const acceptedType = this.props.accept && this.props.accept.replace(".", "");
     const fileType = file && file.type.split("/")[1];
+
+    if (!acceptedType || (!fileType && !acceptedType)) { return true; }
     
     return acceptedType === fileType
   }
@@ -87,18 +88,25 @@ class FileInput extends Component<Props> {
   };
 
   public handleChange = (files: FileList) => {
-    const file = files[0];
 
-    if (!this.isValidType(file)) {
+    const filesArray = new Array(...files);
+
+    const areFilesValid = filesArray.every(f => this.isValidType(f));
+
+    if (!areFilesValid) {
       return;
     }
-    
-    if (file) {
+
+    if (files.length > 1) {
       this.setState({
-        fileName: file.name
+        fileName: `${files.length} files loaded`
+      })
+    } else {
+      this.setState({
+        fileName: files[0] ? files[0].name : ""
       })
     }
-    
+
     this.props.onChange(files);
   }
 
