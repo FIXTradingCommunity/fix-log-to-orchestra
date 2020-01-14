@@ -2,6 +2,7 @@
  * Copyright 2019, FIX Protocol Ltd.
  */
 
+import Checkbox from '@material-ui/core/Checkbox';
 import TextField from '@material-ui/core/TextField';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
@@ -32,7 +33,7 @@ export default class App extends Component {
   private alertMsg: string = "";
 
   public render() {
-    // this.CheckAuthenticated();
+    this.CheckAuthenticated();
 
     return (
       <div className="App">
@@ -96,9 +97,16 @@ export default class App extends Component {
                 <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
               </div>
             </div>
-            <div>
-              <input type="checkbox" id="appendCheckbox" onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.appendToggle(e.target.checked)}></input>
-              <label htmlFor="appendCheckbox">Append only (removes no scenarios)</label><br />
+            <div className="checkboxContainer">
+              <Checkbox
+                size="medium"
+                disableRipple={true}
+                classes={{
+                  root: "checkbox"
+                }}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.appendToggle(e.target.checked)}
+              />
+              <label>Append only (removes no scenarios)</label><br />
             </div>
             <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
             <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
