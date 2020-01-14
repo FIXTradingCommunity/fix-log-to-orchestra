@@ -277,6 +277,14 @@ footer p {
     cursor: pointer;
 }
 
+.textField-focused fieldset {
+    border-color: #009FE3 !important;
+}
+
+.textField-label-focused {
+    color: #009FE3 !important;
+}
+
 @media (min-width: 576px) {
     .container {
         max-width: 540px;
