@@ -3,6 +3,7 @@
  */
 
 import TextField from '@material-ui/core/TextField';
+import * as Sentry from '@sentry/browser';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
 import React, { Component } from 'react';
@@ -15,6 +16,7 @@ import './log2orchestra.css';
 import OrchestraFile from "./OrchestraFile";
 import Utility from './utility';
 
+const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
 export default class App extends Component {
   public static readonly rightsMsg: string = "© Copyright 2019, FIX Protocol Ltd.";
@@ -31,8 +33,14 @@ export default class App extends Component {
   private configurationProgress: HTMLElement | undefined = undefined;
   private alertMsg: string = "";
 
+  constructor(props: {}) {
+    super(props)
+
+    Sentry.init({ dsn: SENTRY_DNS_KEY });
+  }
+
   public render() {
-    // this.CheckAuthenticated();
+    this.CheckAuthenticated();
 
     return (
       <div className="App">
@@ -177,6 +185,7 @@ export default class App extends Component {
       try {
         await runner.run();
       } catch (error) {
+        Sentry.captureException(error);
         if (error instanceof Error && error.stack) {
           this.alertMsg = error.stack;
         } else if (error) {
