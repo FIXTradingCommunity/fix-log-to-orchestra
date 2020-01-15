@@ -54,6 +54,7 @@ label {
     margin-top: 2px;
     margin-bottom: 2px;
     text-align: left;
+    color: #737373;
 }
 
 input[type=file] {
@@ -283,6 +284,21 @@ footer p {
 
 .textField-label-focused {
     color: #009FE3 !important;
+}
+
+.checkboxContainer {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox {
+    color: #009FE3 !important;
+    padding: 0 !important;
+    margin-right: 10px !important;
+}
+
+.checkbox:hover {
+    background-color: transparent !important;
 }
 
 @media (min-width: 576px) {
