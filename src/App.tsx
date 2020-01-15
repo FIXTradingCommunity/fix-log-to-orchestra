@@ -19,8 +19,10 @@ import Utility from './utility';
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
+const currentYear = new Date().getFullYear();
+
 export default class App extends Component {
-  public static readonly rightsMsg: string = "© Copyright 2019, FIX Protocol Ltd.";
+  public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
 
   public state = { showAlerts: false, showHelp: false }
   private referenceFile: File | undefined = undefined;
