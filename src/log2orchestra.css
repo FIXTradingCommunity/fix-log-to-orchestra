@@ -264,6 +264,7 @@ footer p {
     margin: 0;
     height: 16px;
     color: #737373;
+    font-size: 11px;
 }
 
 .chooseFileButton {
