@@ -108,8 +108,10 @@ export default class App extends Component {
               />
               <label>Append only (removes no scenarios)</label><br />
             </div>
-            <button type="button" id="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
-            <button type="button" id="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
+            <div className="buttonsContainer">
+              <button type="button" className="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
+              <button type="button" className="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
+            </div>
             <output id="output"></output>
             {
               this.state.showAlerts && 

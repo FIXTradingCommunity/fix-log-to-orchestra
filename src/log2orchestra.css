@@ -301,26 +301,47 @@ footer p {
     background-color: transparent !important;
 }
 
+.createButton {
+    margin: 0;
+    border: none;
+    height: 46px;
+    background-color: #64C97C;
+    border-radius: 23px;
+    padding: 0 40px;
+    color: #FFFFFF;
+    font-weight: 500;
+    font-size: 14px;
+    margin-top: 20px;
+}
+
+.helpButton {
+    margin: 0;
+    border: 2px solid #E6E6E6;
+    height: 46px;
+    width: 46px;
+    border-radius: 50%;
+    color: #E6E6E6;
+    font-weight: 500;
+    font-size: 18px;
+    margin-top: 20px;
+    margin-left: 20px;
+    cursor: pointer;
+}
+
 @media (min-width: 576px) {
     .container {
         max-width: 540px;
     }
 }
 
-@media (min-width: 768px) {
-    .container {
-        max-width: 720px;
-    }
-}
-
 @media (min-width: 992px) {
     .container {
-        max-width: 960px;
+        max-width: 1080px;
     }
 }
 
 @media (min-width: 1200px) {
     .container {
-        max-width: 1140px;
+        max-width: 1360px;
     }
 }
