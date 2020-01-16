@@ -125,8 +125,8 @@ export default class App extends Component {
             <output id="output"></output>
             {
               this.state.showAlerts && 
-              <div className="container" id="alerts" >
-                <textarea readOnly={true} className="error-message" id="alertMsgs" value={this.alertMsg}></textarea>
+              <div className="errorContainer">
+                <textarea readOnly={true} className="errorMessage" value={this.alertMsg}></textarea>
               </div>
             }
           </div>

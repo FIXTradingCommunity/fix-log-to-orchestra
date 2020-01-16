@@ -198,11 +198,6 @@ footer p {
     color: white;
 }
 
-.error-message {
-  color: red;
-  width: 100%
-}
-
 .inputBox {
     width: 200px;
     height: 225px;
@@ -335,6 +330,21 @@ footer p {
 
 .Help-container h2 {
     color: #000000;
+}
+
+.errorContainer {
+    margin-top: 20px;
+    width: 100%;
+}
+
+.errorMessage {
+    color: red;
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    padding: 10px;
+    resize: none;
 }
 
 @media (min-width: 576px) {
