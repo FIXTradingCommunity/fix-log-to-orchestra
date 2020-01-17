@@ -7,6 +7,8 @@ interface Props {
   accept?: HTMLInputElement['accept'];
   multiple?: boolean;
   onChange: (files: FileList) => void;
+  error?: string;
+  clearError?: () => void;
 }
 
 class FileInput extends Component<Props> {
@@ -17,7 +19,7 @@ class FileInput extends Component<Props> {
   }
 
   public render() {
-    const { label, accept, multiple = false } = this.props;
+    const { label, accept, multiple = false, error } = this.props;
     const { pct, fileName } = this.state;
 
     return (
@@ -39,7 +41,7 @@ class FileInput extends Component<Props> {
                   accept={accept}
                   multiple={multiple}
                 />
-                <div className={`inputBox ${isDragActive ? "dragActive" : ""} ${!isValidFileType && isDragActive ? "inputBoxError" : ""}`}>
+                <div className={`inputBox ${isDragActive ? "dragActive" : ""} ${(!isValidFileType && isDragActive) || error  ? "inputBoxError" : ""}`}>
                   {
                     isDragActive ?
                       <>
@@ -59,7 +61,8 @@ class FileInput extends Component<Props> {
                           <p className="inputText">Drag file to upload or</p>
                           <div className="chooseFileButton">Chose File{multiple ? "s" : ""}</div>
                         </div>
-                        <p className="fileName">{fileName}</p>
+                        { !error && <p className="fileName">{fileName}</p>}
+                        { error && <p className="fileName inputTextError">{error}</p> }
                       </>
                   }
                 </div>
@@ -84,6 +87,9 @@ class FileInput extends Component<Props> {
   public onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files && e.target.files;
 
+    if (this.props.clearError) {
+      this.props.clearError();
+    }
     this.handleChange(files as FileList);
   };
 

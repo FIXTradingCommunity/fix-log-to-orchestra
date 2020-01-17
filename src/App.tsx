@@ -25,7 +25,13 @@ const currentYear = new Date().getFullYear();
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
 
-  public state = { showAlerts: false, showHelp: false }
+  public state = {
+    logFilesError: "",
+    orchestraFileNameError: "",
+    referenceFileError: "",
+    showAlerts: false,
+    showHelp: false,
+  }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
   private configurationFile: File | undefined = undefined;
@@ -65,6 +71,8 @@ export default class App extends Component {
                   accept=".xml"
                   onChange={this.inputOrchestra}
                   ref={this.setInputFileBarRef as () => {}}
+                  error={this.state.referenceFileError}
+                  clearError={() => { this.setState({ referenceFileError: "" })}}
                 />
               </div>
               <div className="field">
@@ -73,6 +81,8 @@ export default class App extends Component {
                   onChange={this.inputLogs}
                   ref={this.setLogFileBarRef as () => {}}
                   multiple={true}
+                  error={this.state.logFilesError}
+                  clearError={() => { this.setState({ logFilesError: "" })}}
                 />
               </div>
               <div className="field">
@@ -89,7 +99,7 @@ export default class App extends Component {
               <TextField
                 label="Orchestra file to create (*.xml)"
                 type="text"
-                variant="outlined"
+                variant={"outlined"}
                 defaultValue={this.orchestraFileName}
                 InputProps={{
                   classes: {
@@ -103,6 +113,8 @@ export default class App extends Component {
                   shrink: true,
                 }}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}
+                error={!!this.state.orchestraFileNameError}
+                helperText={this.state.orchestraFileNameError}
               />
             </div>
             <div className="checkboxContainer">
@@ -155,6 +167,11 @@ export default class App extends Component {
     }
   };
   private outputOrchestra = (fileName: string | undefined): void => {
+    if (this.state.orchestraFileNameError) {
+      this.setState({
+        orchestraFileNameError: ""
+      })
+    }
     this.orchestraFileName = fileName;
   };
   private appendToggle = (checked: boolean): void => {
@@ -209,23 +226,12 @@ export default class App extends Component {
         this.createLink(runner.contents);
       }
     } else {
-      this.alertMsg = this.createErrorMsgs();
-      this.setState({ showAlerts: true });
+      this.setState({
+        logFilesError: !this.logFiles && "Reference Orchestra file not selected",
+        orchestraFileNameError: !this.orchestraFileName && "Orchestra file name not entered",
+        referenceFileError: !this.referenceFile && "FIX log file not selected",
+      });
     }
-  }
-
-  private createErrorMsgs(): string {
-    const errorMsgs = new Array<string>();
-    if (!this.referenceFile) {
-      errorMsgs.push("Reference Orchestra file not selected");
-    }
-    if (!this.logFiles) {
-      errorMsgs.push("FIX log file not selected");
-    }
-    if (!this.orchestraFileName) {
-      errorMsgs.push("Orchestra file name not entered");
-    }
-    return errorMsgs.join('\n');
   }
 
   private createLink(contents: Blob): void {

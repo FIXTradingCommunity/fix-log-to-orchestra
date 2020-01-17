@@ -250,16 +250,16 @@ footer p {
     padding-bottom: 10px;
 }
 
-.inputTextError {
-    color: #FC1E1E;
-}
-
 .fileName {
     text-align: center;
     margin: 0;
     height: 16px;
     color: #737373;
     font-size: 11px;
+}
+
+.inputTextError {
+    color: #FC1E1E;
 }
 
 .chooseFileButton {
