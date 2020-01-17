@@ -15,6 +15,7 @@ import Help from "./Help";
 import Log2Orchestra from "./log2orchestra";
 import './log2orchestra.css';
 import OrchestraFile from "./OrchestraFile";
+import ProgressBar from './ProgressBar';
 import Utility from './utility';
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
@@ -103,9 +104,6 @@ export default class App extends Component {
                 }}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => this.outputOrchestra(e.target.value)}
               />
-              <div className="bar">
-                <div id="outputFileBar" className="progressBar" ref={this.setOutputFileBarRef}></div>
-              </div>
             </div>
             <div className="checkboxContainer">
               <Checkbox
@@ -122,6 +120,7 @@ export default class App extends Component {
               <button type="button" className="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
               <button type="button" className="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
             </div>
+            <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
             <output id="output"></output>
             {
               this.state.showAlerts && 
@@ -177,7 +176,7 @@ export default class App extends Component {
   private showProgress(progressNode: HTMLElement, percent: number): void {
     if (percent >= 0) {
 
-      if (progressNode instanceof FileInput) {
+      if (progressNode instanceof FileInput || progressNode instanceof ProgressBar) {
         progressNode.setProgress(percent);
       }
 
@@ -239,6 +238,7 @@ export default class App extends Component {
       }
 
       const a: HTMLAnchorElement = document.createElement('a');
+      a.classList.add("fileReadyButton");
       a.download = this.orchestraFileName;
       a.href = window.URL.createObjectURL(contents);
       a.dataset.downloadurl = [OrchestraFile.MIME_TYPE, a.download, a.href].join(':');
