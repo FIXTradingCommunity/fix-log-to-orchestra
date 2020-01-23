@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
+import upArrow from "../../assets/up-arrow.svg";
 import "./progressCircle.css";
-import upArrow from "./up-arrow.svg";
 
 interface Props {
   value: number;
@@ -19,7 +19,7 @@ class ProgressCircle extends Component<Props> {
   }
   
   public render() {
-    const  { value } = this.props;
+    const { value } = this.props;
 
     const pctString: string = Math.floor(value).toString() + "%";
     const pct = ((100-value)/100) * c;
