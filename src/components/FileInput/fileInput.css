@@ -6,14 +6,14 @@
 
 .inputBox {
   width: 200px;
-  height: 225px;
+  min-height: 225px;
   border-radius: 20px;
   box-shadow: 0px 2px 200px rgba(0, 0, 0, 0.09);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0;
+  padding: 20px 10px;
   border: 2px solid #FFFFFF;
 }
 
@@ -54,14 +54,16 @@
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: 10px;
+  min-height: 100px;
 }
 
 .fileName {
   text-align: center;
   margin: 0;
-  height: 16px;
+  min-height: 16px;
   color: #737373;
   font-size: 11px;
+  word-break: break-all;
 }
 
 .inputTextError {
