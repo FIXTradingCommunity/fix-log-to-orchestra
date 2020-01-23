@@ -3,7 +3,7 @@
  */
 
 import React, { Component } from 'react';
-import './log2orchestra.css';
+import './help.css';
 
 export default class Help extends Component {
     

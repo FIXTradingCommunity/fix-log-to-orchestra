@@ -8,15 +8,15 @@ import * as Sentry from '@sentry/browser';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
 import React, { Component } from 'react';
-import { version } from '../package.json';
-import FileInput from './FileInput';
-import logo from './FIXorchestraLogo.png';
-import Help from "./Help";
-import Log2Orchestra from "./log2orchestra";
-import './log2orchestra.css';
-import OrchestraFile from "./OrchestraFile";
-import ProgressBar from './ProgressBar';
-import Utility from './utility';
+import { version } from '../../package.json';
+import logo from '../assets/FIXorchestraLogo.png';
+import Log2Orchestra from "../lib/log2orchestra";
+import OrchestraFile from "../lib/OrchestraFile";
+import Utility from '../lib/utility';
+import './app.css';
+import FileInput from './FileInput/FileInput';
+import Help from "./Help/Help";
+import ProgressBar from './ProgressBar/ProgressBar';
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 

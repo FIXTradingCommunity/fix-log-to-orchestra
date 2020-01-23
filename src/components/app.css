@@ -32,10 +32,6 @@
     text-align: left;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
 body {
     font-family: sans-serif;
     font-size: small;
@@ -152,16 +148,6 @@ footer p {
     font-weight: 100;
 }
 
-/* .container {
-    display: block;
-    border-style: solid;
-    border-width: 1px;
-    padding: 5px;
-    width: 50%;
-    height: 100%;
-    min-height: 500px;
-} */
-
 .field {
     border: none;
     margin-top: 10px;
@@ -174,104 +160,10 @@ footer p {
     display: flex;
 }
 
-.fileInput {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
 .bar {
     width: 200px;
     background-color: lightgrey;
     visibility: hidden;
-}
-
-.progressBar {
-    width: 1%;
-    height: 20px;
-    background-color: green;
-    text-align: right;
-    vertical-align: middle;
-    font-family: sans-serif;
-    font-size: smaller;
-    font-weight: bold;
-    color: white;
-}
-
-.inputBox {
-    width: 200px;
-    height: 225px;
-    border-radius: 20px;
-    box-shadow: 0px 2px 200px rgba(0, 0, 0, 0.09);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 0;
-    border: 2px solid #FFFFFF;
-}
-
-.inputBox.dragActive {
-    border: 2px solid #009FE3;
-    background-color: rgba(0, 159, 227, 0.1);
-}
-
-.inputBox.inputBoxError {
-    border: 2px solid #FC1E1E;
-    background-color: #FFFFFF;
-}
-
-.inputLabel {
-    text-align: center;
-    color: #0E518A;
-    display: flex;
-    height: 30px;
-    vertical-align: baseline;
-    align-items: center;
-}
-
-.upArrow {
-    width: 20px;
-    height: 20px;
-    position: absolute;
-}
-
-.inputText {
-    font-weight: 100;
-    color: #737373;
-    text-align: center;
-}
-
-.inputContent {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding-bottom: 10px;
-}
-
-.fileName {
-    text-align: center;
-    margin: 0;
-    height: 16px;
-    color: #737373;
-    font-size: 11px;
-}
-
-.inputTextError {
-    color: #FC1E1E;
-}
-
-.chooseFileButton {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 28px;
-    padding: 0 30px;
-    background: #009FE3;
-    border-radius: 14px;
-    color: #FFF;
-    cursor: pointer;
 }
 
 .textField-focused fieldset {
@@ -322,14 +214,6 @@ footer p {
     margin-top: 20px;
     margin-left: 20px;
     cursor: pointer;
-}
-
-.Help-container * {
-    color: #666666;
-}
-
-.Help-container h2 {
-    color: #000000;
 }
 
 .errorContainer {

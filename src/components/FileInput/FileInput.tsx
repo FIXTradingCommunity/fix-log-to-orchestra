@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
-import ProgressCircle from "./ProgressCircle";
+import ProgressCircle from "../ProgressCircle/ProgressCircle";
+import "./fileInput.css";
 
 interface Props {
   label: string;
