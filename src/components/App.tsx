@@ -35,6 +35,7 @@ export default class App extends Component {
     downloadUrl: "",
     creatingFile: false,
     downloaded: false,
+    authVerified: false,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -54,6 +55,9 @@ export default class App extends Component {
   }
 
   public render() {
+    if (!this.state.authVerified) {
+      return null
+    }
 
     return (
       <div className="App">
@@ -342,6 +346,10 @@ export default class App extends Component {
       if (!verified) {
         throw new Error("unauthenticated");
       }
+
+      this.setState({
+        authVerified: true,
+      })
 
     } catch (e) {
       Utility.Log(e);
