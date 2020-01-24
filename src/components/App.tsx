@@ -31,6 +31,10 @@ export default class App extends Component {
     referenceFileError: "",
     showAlerts: false,
     showHelp: false,
+    downloadHref: "",
+    downloadUrl: "",
+    creatingFile: false,
+    downloaded: false,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -50,7 +54,6 @@ export default class App extends Component {
   }
 
   public render() {
-    this.CheckAuthenticated();
 
     return (
       <div className="App">
@@ -129,7 +132,27 @@ export default class App extends Component {
               <label>Append only (removes no scenarios)</label><br />
             </div>
             <div className="buttonsContainer">
-              <button type="button" className="createButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}>Create Orchestra file</button>
+              {
+                !this.state.downloadHref
+                  ? <button
+                      type="button"
+                      className="submitButton"
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}
+                    >
+                      {
+                        this.state.creatingFile ? "Loading..." : "Create Orchestra file"
+                      }
+                    </button>
+                  : <a
+                      className="submitButton downloadButton"
+                      href={this.state.downloadHref}
+                      download={this.orchestraFileName}
+                      data-downloadurl={this.state.downloadUrl}
+                      onClick={this.handleDownloadClick.bind(this)}
+                    >
+                      { this.state.downloaded ? "Downloaded" : "Download File"}
+                    </a>
+              }
               <button type="button" className="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
             </div>
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
@@ -149,6 +172,10 @@ export default class App extends Component {
         </footer>
       </div>
     );
+  }
+
+  public componentDidMount() {
+    this.CheckAuthenticated();
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {
@@ -207,11 +234,17 @@ export default class App extends Component {
   private async createOrchestra(): Promise<void> {
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
-      this.setState({ showAlerts: false, showHelp: false });
+      this.setState({ showAlerts: false, showHelp: false, creatingFile: true });
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
       try {
         await runner.run();
+        this.setState({ creatingFile: false });
+
+        if (this.outputProgress instanceof ProgressBar) {
+          this.outputProgress.setProgress(0);
+        }
+        
       } catch (error) {
         Sentry.captureException(error);
         if (error instanceof Error && error.stack) {
@@ -219,7 +252,7 @@ export default class App extends Component {
         } else if (error) {
           this.alertMsg = error;
         }
-        this.setState({ showAlerts: true });
+        this.setState({ showAlerts: true, creatingFile: false });
       }
 
       if (runner.contents) {
@@ -227,6 +260,7 @@ export default class App extends Component {
       }
     } else {
       this.setState({
+        creatingFile: false,
         logFilesError: !this.logFiles && "Reference Orchestra file not selected",
         orchestraFileNameError: !this.orchestraFileName && "Orchestra file name not entered",
         referenceFileError: !this.referenceFile && "FIX log file not selected",
@@ -235,36 +269,29 @@ export default class App extends Component {
   }
 
   private createLink(contents: Blob): void {
-    const output: HTMLElement | null = document.getElementById("output");
-    if (output && this.orchestraFileName) {
-      const prevLink: HTMLAnchorElement | null = output.querySelector('a');
-      if (prevLink) {
-        window.URL.revokeObjectURL(prevLink.href);
-        output.innerHTML = '';
-      }
+    if (this.orchestraFileName) {
+      const url = window.URL.createObjectURL(contents);
 
-      const a: HTMLAnchorElement = document.createElement('a');
-      a.classList.add("fileReadyButton");
-      a.download = this.orchestraFileName;
-      a.href = window.URL.createObjectURL(contents);
-      a.dataset.downloadurl = [OrchestraFile.MIME_TYPE, a.download, a.href].join(':');
-      a.textContent = 'File ready';
-
-      output.appendChild(a);
-      a.onclick = function (event: Event) {
-        const element = event.target as HTMLAnchorElement;
-        if ('disabled' in element.dataset) {
-          return false;
-        }
-
-        a.textContent = 'Downloaded';
-        a.dataset.disabled = "true";
-
-        setTimeout(function () {
-          window.URL.revokeObjectURL(a.href);
-        }, 1500);
-      }
+      this.setState({
+        downloadHref: url,
+        downloadUrl: [OrchestraFile.MIME_TYPE, this.orchestraFileName, url].join(':'),
+        loading: true,
+      });
     }
+  }
+
+  private handleDownloadClick(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>): void {
+    this.setState({
+      downloaded: true
+    });
+    setTimeout(() => {
+      this.setState({
+        downloadHref: "",
+        downloadUrl: "",
+        downloaded: false,
+        loading: false,
+      });
+    }, 1500);
   }
 
   private CheckAuthenticated() {
