@@ -259,6 +259,15 @@ footer p {
     color: #FFF;
 }
 
+.clearFieldsButton {
+    background: none;
+    border: none;
+    border-color: white;
+    padding: 10px;
+    color: #9D9D9D;
+    font-size: 14px;
+}
+
 @media (min-width: 576px) {
     .container {
         max-width: 540px;
