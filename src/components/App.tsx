@@ -64,6 +64,7 @@ export default class App extends Component {
     downloaded: false,
     results: undefined,
     showResults: false,
+    authVerified: false,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -83,6 +84,9 @@ export default class App extends Component {
   }
 
   public render() {
+    if (!this.state.authVerified) {
+      return null
+    }
 
     return (
       <div className="App">
@@ -457,6 +461,10 @@ export default class App extends Component {
           sub: userData.sub,
         });
       });
+
+      this.setState({
+        authVerified: true,
+      })
 
     } catch (e) {
       Utility.Log(e);
