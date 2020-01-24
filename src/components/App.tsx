@@ -156,6 +156,7 @@ export default class App extends Component {
               <button type="button" className="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
             </div>
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
+            <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>Clear Fields</button>
             <output id="output"></output>
             {
               this.state.showAlerts && 
@@ -176,6 +177,30 @@ export default class App extends Component {
 
   public componentDidMount() {
     this.CheckAuthenticated();
+  }
+
+  private handleClearFields() {
+    if (this.referenceFile) {
+      this.referenceFile = undefined;
+    }
+    if (this.logFiles) {
+      this.logFiles = undefined;
+    }
+    if (this.configurationFile) {
+      this.configurationFile = undefined;
+    }
+    if (this.orchestraFileName) {
+      this.orchestraFileName = "";
+    }
+    if (this.inputProgress instanceof FileInput) {
+      this.inputProgress.clear()
+    }
+    if (this.logProgress instanceof FileInput) {
+      this.logProgress.clear()
+    }
+    if (this.configurationProgress instanceof FileInput) {
+      this.configurationProgress.clear()
+    }
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {

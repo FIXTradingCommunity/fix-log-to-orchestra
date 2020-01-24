@@ -123,6 +123,12 @@ class FileInput extends Component<Props> {
     })
   };
 
+  public clear = () => {
+    this.setState({
+      fileName: "",
+    })
+  }
+
   private onDrop = (acceptedFiles: FileList) => {
     
     this.handleChange(acceptedFiles)
