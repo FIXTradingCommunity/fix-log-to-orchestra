@@ -114,11 +114,6 @@ a {
     text-decoration: none;
 }
 
-a:hover {
-    background-color: #0F0263;
-    color: white;
-}
-
 .container {
     width: 100%;
     padding-right: 15px;
@@ -189,17 +184,33 @@ footer p {
     background-color: transparent !important;
 }
 
-.createButton {
+.submitButton {
     margin: 0;
+    display: inline-block;
     border: none;
     height: 46px;
+    min-width: 210px;
     background-color: #64C97C;
     border-radius: 23px;
-    padding: 0 40px;
+    padding: 15px 40px;
     color: #FFFFFF;
     font-weight: 500;
     font-size: 14px;
     margin-top: 20px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.submitButton:hover {
+    background-color: #4eb767;
+}
+
+.downloadButton {
+    background-color: #009FE3;
+}
+
+.downloadButton:hover {
+    background-color: #006c9a;
 }
 
 .helpButton {
