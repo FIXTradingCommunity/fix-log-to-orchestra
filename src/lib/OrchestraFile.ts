@@ -10,6 +10,7 @@ import { IsSupportedfromString, Presence, PresencefromString, StructureModel } f
 
 export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
+    static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra.repository";
 
     private file: File;
     private document: Document = new Document();
@@ -150,13 +151,13 @@ export default class OrchestraFile {
                 }
             }
             if (!messageElement) {
-                messageElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:message");
+                messageElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:message");
                 messageElement.setAttribute("name", message.name);
                 messageElement.setAttribute("scenario", message.scenario);
                 messageElement.setAttribute("id", message.id);
                 messageElement.setAttribute("msgType", message.msgType);
                 messagesElement.appendChild(messageElement);
-                const structureElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:structure");
+                const structureElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:structure");
                 messageElement.appendChild(structureElement);
                 this.addMembers(structureElement, message);
             }
@@ -165,7 +166,7 @@ export default class OrchestraFile {
     private addMembers(structureElement: Element, structure: StructureModel) {
         structure.members.forEach(m => {
             if (m instanceof FieldRef) {
-                const memberElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:fieldRef");
+                const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:fieldRef");
                 memberElement.setAttribute("id", m.id);
                 memberElement.setAttribute("presence", m.presence.toString());
                 if (m.value) {
@@ -177,7 +178,7 @@ export default class OrchestraFile {
                 structureElement.appendChild(memberElement);
             }
             else if (m instanceof ComponentRef) {
-                const memberElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:componentRef");
+                const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:componentRef");
                 memberElement.setAttribute("id", m.id);
                 memberElement.setAttribute("presence", m.presence.toString());
                 if (m.scenario != FieldRef.defaultScenario) {
@@ -186,7 +187,7 @@ export default class OrchestraFile {
                 structureElement.appendChild(memberElement);
             }
             else if (m instanceof GroupRef) {
-                const memberElement: Element = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:groupRef");
+                const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:groupRef");
                 memberElement.setAttribute("id", m.id);
                 memberElement.setAttribute("presence", m.presence.toString());
                 if (m.scenario != FieldRef.defaultScenario) {
@@ -462,7 +463,7 @@ export default class OrchestraFile {
                 }
             }
             if (!codesetElement) {
-                codesetElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:codeSet");
+                codesetElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:codeSet");
                 codesetElement.setAttribute("name", codeset.name);
                 codesetElement.setAttribute("scenario", codeset.scenario);
                 codesetElement.setAttribute("id", codeset.id);
@@ -501,7 +502,7 @@ export default class OrchestraFile {
             notFoundInDom.forEach((value: string) => {
                 const code: CodeModel | undefined = codeset.getByValue(value);
                 if (code) {
-                    const codeElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:code");
+                    const codeElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:code");
                     codeElement.setAttribute("name", code.name);
                     codeElement.setAttribute("id", code.id);
                     codeElement.setAttribute("value", code.value);
@@ -530,7 +531,7 @@ export default class OrchestraFile {
                 }
             }
             if (!fieldElement) {
-                fieldElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:field");
+                fieldElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:field");
                 fieldElement.setAttribute("name", field.name);
                 fieldElement.setAttribute("scenario", field.scenario);
                 fieldElement.setAttribute("id", field.id);
@@ -562,7 +563,7 @@ export default class OrchestraFile {
                 }
             }
             if (!componentElement) {
-                componentElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:component");
+                componentElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:component");
                 componentElement.setAttribute("name", component.name);
                 componentElement.setAttribute("scenario", component.scenario);
                 componentElement.setAttribute("id", component.id);
@@ -594,7 +595,7 @@ export default class OrchestraFile {
                 }
             }
             if (!groupElement) {
-                groupElement = this.dom.createElementNS("http://fixprotocol.io/2016/fixrepository", "fixr:group");
+                groupElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:group");
                 groupElement.setAttribute("name", group.name);
                 groupElement.setAttribute("scenario", group.scenario);
                 groupElement.setAttribute("id", group.id);
