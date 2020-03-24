@@ -2,7 +2,7 @@
  * Copyright 2019, FIX Protocol Ltd.
  */
 
- import CodesetModel, { CodeModel } from "./CodesetModel";
+import CodesetModel, { CodeModel } from "./CodesetModel";
 import { messageScenarioKeysType } from "./ConfigurationFile";
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import MessageModel, { FieldContext, FieldModel, FieldRef } from "./MessageModel";
@@ -129,22 +129,34 @@ export default class LogModel {
     messageListener = (messageInstance: MessageInstance) => {
         // skip a malformed message
         if (!messageInstance.msgType) {
+            // todo: log event
             return;
         }
         const messageModel: MessageModel | undefined = this.getMessageScenario(messageInstance);
         if (!messageModel) {
+            // user defined message type not supported (?)
+            // todo: log event
             return;
         }
         for (let fieldInstance of messageInstance) {
-            const fieldContext: FieldContext | undefined = messageModel.findFieldRef(fieldInstance.tag);
-            if (fieldContext) {
-                let fieldRef: FieldRef = fieldContext[0];
-                if (!fieldRef) {
-                    // Add a fieldRef not in the message reference model
-                    // Todo: perhaps infer presence as always present=Required, otherwise Optional 
-                    fieldRef = new FieldRef(fieldInstance.tag, messageModel.scenario, Presence.Optional);
-                    messageModel.addMember(fieldRef);
+            // find this field in the existing message model or one of its nested components
+            let fieldContext: FieldContext | undefined = messageModel.findFieldRef(fieldInstance.tag);
+            if (!fieldContext) {
+                // Add a fieldRef not in the message reference model
+                // Todo: perhaps infer presence as always present=Required, otherwise Optional 
+                let fieldRef: FieldRef = new FieldRef(fieldInstance.tag, FieldModel.defaultScenario, Presence.Optional);
+                messageModel.addMember(fieldRef);
+                fieldContext = [fieldRef, messageModel, undefined];
+                fieldRef.field = this.orchestraModel.fields.getById(fieldInstance.tag, FieldModel.defaultScenario);
+                if (!fieldRef.field) {
+                    // add a new field of default datatype, no codeset inference
+                    // field name must begin with alpha character
+                    fieldRef.field = new FieldModel(fieldRef.id, "Field" + fieldRef.id.toString(), FieldModel.defaultDatatype, FieldModel.defaultScenario);
+                    this.orchestraModel.fields.add(fieldRef.field);
                 }
+            }
+            else {
+                let fieldRef: FieldRef = fieldContext[0];
                 if (!fieldRef.field) {
                     // set the field it is already defined for this scenario
                     fieldRef.field = this.model.fields.getById(fieldInstance.tag, messageModel.scenario);
@@ -170,39 +182,40 @@ export default class LogModel {
                                 fieldRef.field = defaultField;
                             }
                         }
-                        else {
-                            // add a new field of default datatype
-                            fieldRef.field = new FieldModel(fieldRef.id, fieldRef.id.toString(), FieldModel.defaultDatatype, messageModel.scenario);
-                            this.orchestraModel.fields.add(fieldRef.field);
-                        }
-                    }
-                }
-                // increment use of this fieldRef
-                fieldRef.use();
-                // increment use of the component, group or message containing this fieldRef
-                if (fieldContext[1]) {
-                    const sm: StructureModel = fieldContext[1];
-                    sm.use();
-                }
-                // increment use of componentRef or groupRef
-                if (fieldContext[2]) {
-                    const sm: StructureMember = fieldContext[2];
-                    sm.use();
-                }
-                if (fieldRef.codeset && fieldInstance.value) {
-                    let code: CodeModel | undefined = fieldRef.codeset.getByValue(fieldInstance.value);
-                    if (!code) {
-                        // add a code not in reference model
-                        code = new CodeModel(null, fieldInstance.value, fieldInstance.value, IsSupported.Supported);
-                        fieldRef.codeset.add(code);
-                    }
-                    if (code) {
-                        code.use();
                     }
                 }
             }
+            this.incrementUse(fieldContext, fieldInstance);
         }
-    };
+    }
+
+    private incrementUse(fieldContext: FieldContext, fieldInstance: FieldInstance) {
+        let fieldRef: FieldRef = fieldContext[0];
+        // increment use of this fieldRef
+        fieldRef.use();
+        // increment use of the component, group or message containing this fieldRef
+        if (fieldContext[1]) {
+            const sm: StructureModel = fieldContext[1];
+            sm.use();
+        }
+        // increment use of componentRef or groupRef
+        if (fieldContext[2]) {
+            const sm: StructureMember = fieldContext[2];
+            sm.use();
+        }
+        if (fieldRef.codeset && fieldInstance.value) {
+            let code: CodeModel | undefined = fieldRef.codeset.getByValue(fieldInstance.value);
+            if (!code) {
+                // add a code not in reference model
+                code = new CodeModel(null, fieldInstance.value, fieldInstance.value, IsSupported.Supported);
+                fieldRef.codeset.add(code);
+            }
+            if (code) {
+                code.use();
+            }
+        }
+    }
 }
+
 
 
