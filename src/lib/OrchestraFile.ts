@@ -10,7 +10,7 @@ import { IsSupportedfromString, Presence, PresencefromString, StructureModel } f
 
 export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
-    static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra.repository";
+    static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra/repository";
 
     private file: File;
     private document: Document = new Document();
