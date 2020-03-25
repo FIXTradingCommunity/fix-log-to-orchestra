@@ -600,6 +600,9 @@ export default class OrchestraFile {
                 groupElement.setAttribute("scenario", group.scenario);
                 groupElement.setAttribute("id", group.id);
                 groupsElement.appendChild(groupElement);
+                const numInGroupElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:numInGroup");
+                numInGroupElement.setAttribute("id", group.numInGroup);
+                groupElement.appendChild(numInGroupElement);
                 this.addMembers(groupElement, group);
             }
             if (group.uses > 0) {
