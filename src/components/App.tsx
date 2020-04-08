@@ -296,10 +296,8 @@ export default class App extends Component {
         }
         
       } catch (error) {
-        Sentry.captureException(error);
-        if (error instanceof Error && error.stack) {
-          this.alertMsg = error.stack;
-        } else if (error) {
+        if (error) {
+          Sentry.captureException(error);
           this.alertMsg = error;
         }
         this.setState({ showAlerts: true, creatingFile: false });
