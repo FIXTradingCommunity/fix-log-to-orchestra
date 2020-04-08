@@ -466,6 +466,18 @@ export default class App extends Component {
         authVerified: true,
       })
 
+      const userData = (decoded as IDecodedUserData);
+      Sentry.configureScope((scope) => {
+        scope.setUser({
+          Employer: userData.Employer,
+          email: userData.email,
+          firstname: userData.firstname,
+          groups: userData.groups,
+          lastname: userData.lastname,
+          sub: userData.sub,
+        });
+      });
+
     } catch (e) {
       Utility.Log(e);
 
