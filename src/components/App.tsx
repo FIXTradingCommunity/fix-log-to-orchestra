@@ -22,6 +22,31 @@ const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/14760
 
 const currentYear = new Date().getFullYear();
 
+interface IDecodedUserData {
+  at_hash: string;
+  sub: string;
+  firstname: string;
+  Employer: string;
+  "Zip/Postcode": string | null;
+  iss: string;
+  groups: string[] | null;
+  Title: null;
+  Website: null;
+  "State/Region": string | null;
+  "City": string | null;
+  "Street Address 1": string | null;
+  "Job Title": string | null;
+  nonce: string | null;
+  "Street Address 2": string | null;
+  lastname: string;
+  aud: string[];
+  auth_time: string;
+  Country: string | null;
+  exp: number;
+  iat: number;
+  email: string;
+}
+
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
 
@@ -322,7 +347,6 @@ export default class App extends Component {
   private CheckAuthenticated() {
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
-
     try {
       const decoded: null | object | string = jwt.decode(id_token);
       if (!decoded) {
@@ -342,6 +366,18 @@ export default class App extends Component {
       if (!verified) {
         throw new Error("unauthenticated");
       }
+
+      const userData = (decoded as IDecodedUserData);
+      Sentry.configureScope((scope) => {
+        scope.setUser({
+          Employer: userData.Employer,
+          email: userData.email,
+          firstname: userData.firstname,
+          groups: userData.groups,
+          lastname: userData.lastname,
+          sub: userData.sub,
+        });
+      });
 
     } catch (e) {
       Utility.Log(e);
