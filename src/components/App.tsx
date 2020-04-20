@@ -65,6 +65,8 @@ export default class App extends Component {
     results: undefined,
     showResults: false,
     authVerified: false,
+    results: undefined,
+    showResults: false,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
