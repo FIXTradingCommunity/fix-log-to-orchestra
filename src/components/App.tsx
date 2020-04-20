@@ -12,11 +12,13 @@ import { version } from '../../package.json';
 import logo from '../assets/FIXorchestraLogo.png';
 import Log2Orchestra from "../lib/log2orchestra";
 import OrchestraFile from "../lib/OrchestraFile";
+import OrchestraModel from '../lib/OrchestraModel';
 import Utility from '../lib/utility';
 import './app.css';
 import FileInput from './FileInput/FileInput';
 import Help from "./Help/Help";
 import ProgressBar from './ProgressBar/ProgressBar';
+import ResultsPage from './ResultsPage/ResultsPage';
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
@@ -60,6 +62,8 @@ export default class App extends Component {
     downloadUrl: "",
     creatingFile: false,
     downloaded: false,
+    results: undefined,
+    showResults: false,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -178,6 +182,7 @@ export default class App extends Component {
                       { this.state.downloaded ? "Downloaded" : "Download File"}
                     </a>
               }
+              { (this.state.results && this.state.downloadHref) && <button className="clearFieldsButton showResultsButton" onClick={this.openResults}>Show Results</button> }
               <button type="button" className="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
             </div>
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
@@ -196,6 +201,27 @@ export default class App extends Component {
           <p>Version {version}</p>
           <p>{App.rightsMsg}</p>
         </footer>
+        {
+          this.state.showResults &&
+          <ResultsPage
+            results={this.state.results}
+            onClose={this.closeResults}
+            downloadButton={
+              this.state.downloadHref ? <a
+              className="submitButton downloadButton"
+              href={this.state.downloadHref}
+              download={this.orchestraFileName}
+              data-downloadurl={this.state.downloadUrl}
+              onClick={this.handleDownloadClick.bind(this)}
+            >
+              { this.state.downloaded ? "Downloaded" : "Download File"}
+            </a> : 
+            <button className="submitButton closeResultsButton" onClick={this.closeResults}>
+              Close Results
+            </button>
+            }
+          />
+        }
       </div>
     );
   }
@@ -281,6 +307,58 @@ export default class App extends Component {
       progressNode.parentElement.style.visibility = "visible";
     }
   }
+  private handleReferenceParsed = (referenceModel: OrchestraModel) => {
+    const fixMessageTypes = referenceModel.messages.size;
+
+    const messageScenariosArray: string[] = [];
+    for (const [_, value] of referenceModel.messages) {
+      if (!messageScenariosArray.includes(value.scenario)) {
+        messageScenariosArray.push(value.scenario);
+      }
+    }
+    const messageScenarios = messageScenariosArray.length;
+
+    const fields = referenceModel.fields.size;
+
+    let userDefinedFields = 0;
+    for (const [_, value] of referenceModel.fields) {
+      const key = parseInt(value.id, 10);
+      if ((key >= 5000 && key <= 40000) || key >= 50000 ) {
+        userDefinedFields++;
+      }
+    }
+
+    const components = referenceModel.components.size;
+
+    const componentScenariosArray: string[] = [];
+    for (const [_, value] of referenceModel.messages) {
+      if (!componentScenariosArray.includes(value.scenario)) {
+        componentScenariosArray.push(value.scenario);
+      }
+    }
+    const componentScenarios = componentScenariosArray.length;
+
+    this.setState({
+      results: {
+        componentScenarios,
+        components,
+        fields,
+        fixMessageTypes,
+        messageScenarios,
+        userDefinedFields,
+      }
+    })
+  }
+  private openResults = () => {
+    this.setState({
+      showResults: true,
+    });
+  }
+  private closeResults = () => {
+    this.setState({
+      showResults: false,
+    });
+  }
   private async createOrchestra(): Promise<void> {
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
@@ -288,6 +366,8 @@ export default class App extends Component {
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
       try {
+        runner.onReferenceParsed = this.handleReferenceParsed;
+
         await runner.run();
         this.setState({ creatingFile: false });
 
@@ -305,6 +385,7 @@ export default class App extends Component {
 
       if (runner.contents) {
         this.createLink(runner.contents);
+        this.openResults();
       }
     } else {
       this.setState({
