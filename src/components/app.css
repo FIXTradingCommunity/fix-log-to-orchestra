@@ -267,6 +267,16 @@ footer p {
     font-size: 14px;
 }
 
+.showResultsButton {
+    margin-left: 20px;
+    color: #009FE3;
+}
+
+.submitButton.closeResultsButton {
+    margin: 0;
+    background-color: #bfbfbf;
+}
+
 @media (min-width: 576px) {
     .container {
         max-width: 540px;

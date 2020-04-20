@@ -25,6 +25,7 @@ export default class Log2Orchestra {
     private orchestraFileName: string;
     private logFiles: FileList;
     private configurationFile: File | undefined;
+    public onReferenceParsed: undefined | ((referenceModel: OrchestraModel) => void);
 
     constructor(referenceFile: File, logFiles: FileList, configurationFile: File | undefined, orchestraFileName: string, appendOnly: boolean, inputProgress: HTMLElement | null, outputProgress: HTMLElement | null, logProgress: HTMLElement | null, configProgress: HTMLElement | null,
         progressFunc: (progressNode: HTMLElement, percent: number) => void) {
@@ -40,7 +41,7 @@ export default class Log2Orchestra {
         this.progressFunc = progressFunc;
     }
 
-    async run(): Promise<Blob> {
+    public async run(): Promise<Blob> {
         try {
             const input = new OrchestraFile(this.referenceFile, this.appendOnly, this.inputProgress, this.progressFunc);
             // read local reference Orchestra file
@@ -52,6 +53,10 @@ export default class Log2Orchestra {
             ComponentRef.componentsModel = referenceModel.components;
             GroupRef.groupsModel = referenceModel.groups;
 
+            if (this.onReferenceParsed) {
+                this.onReferenceParsed(referenceModel);
+            }
+
             // it takes a bit of a data dictionary to parse FIX; inform FIX parser of special fields
             const lengthFieldIds: string[] = referenceModel.fields.getIdsByDatatype("Length");
             // tag 9 is of Length type but is message length, not field length, so remove it from special fields for field parser
@@ -62,6 +67,9 @@ export default class Log2Orchestra {
             const output = new OrchestraFile(new File([""], this.orchestraFileName), this.appendOnly, this.outputProgress, this.progressFunc);
             // clones reference dom to output file
             output.dom = input.cloneDom();
+
+            const outreferenceModel: OrchestraModel = new OrchestraModel();
+            output.extractOrchestraModel(outreferenceModel);
 
             const logModel: LogModel = new LogModel(referenceModel);
 
