@@ -7,17 +7,17 @@
  */
 export class TVFieldParser {
     static readonly tagDelimiter: string = "=";
-    static readonly fieldDelimiter: string = String.fromCharCode(1);
+    static fieldDelimiter: string = String.fromCharCode(1);
     static readonly nullFieldParser: TVFieldParser = new TVFieldParser("", 0);
     static lengthFieldIds: Array<string> = new Array<string>();
-
+    
     private str: string;
     private tagOffset: number;
     private valueOffset: number = 0;
     private valueLength: number = 0;
     private nextValueLength: number = 0;
 
-    constructor(str: string, offset: number) {
+    constructor(str: string, offset: number, fieldDelimiter: string = String.fromCharCode(1)) {
         this.str = str;
         this.tagOffset = offset;
     }
@@ -136,7 +136,7 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
     static readonly messageStartDelimiter: string = "8=FIX";
     static readonly bodyLengthTag: string = "9";
     static readonly checksumTag: string = "10";
-    static readonly fieldDelimiter: string = String.fromCharCode(1);
+    static fieldDelimiter: string = String.fromCharCode(1);
     private messageEndOffset: number = 0;
     private str: string = "";
     constructor() {
@@ -155,6 +155,18 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
         // find start of the next message using BeginString
         const messageStartOffset: number = this.str.indexOf(TVFileParser.messageStartDelimiter, this.messageEndOffset);
         if (messageStartOffset != -1) {
+            const delimiterCharIndex = this.str.indexOf(TVFileParser.bodyLengthTag + "=", messageStartOffset) - 1;
+            if (delimiterCharIndex === -1) {
+                // delimiter char not found
+                return {
+                    done: true,
+                    value: TVMessageParser.nullMessageParser
+                };
+            }
+
+            TVFileParser.fieldDelimiter = this.str.charAt(delimiterCharIndex);
+            TVFieldParser.fieldDelimiter = TVFileParser.fieldDelimiter;
+
             let field: TVFieldParser = new TVFieldParser(this.str, messageStartOffset);
             let bodyLength: number;
             if (field.next() && field.next() && field.tag === TVFileParser.bodyLengthTag) {
