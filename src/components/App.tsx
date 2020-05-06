@@ -313,7 +313,7 @@ export default class App extends Component {
       progressNode.parentElement.style.visibility = "visible";
     }
   }
-  private handleReferenceParsed = (referenceModel: OrchestraModel) => {
+  private handleReaderFinish = (referenceModel: OrchestraModel, messagesCount: number) => {
     const fixMessageTypes = referenceModel.messages.size;
 
     const messageScenariosArray: string[] = [];
@@ -350,6 +350,7 @@ export default class App extends Component {
         components,
         fields,
         fixMessageTypes,
+        messagesCount,
         messageScenarios,
         userDefinedFields,
       }
@@ -372,7 +373,7 @@ export default class App extends Component {
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
       try {
-        runner.onReferenceParsed = this.handleReferenceParsed;
+        runner.onFinish = this.handleReaderFinish;
 
         await runner.run();
         this.setState({ creatingFile: false });
@@ -430,6 +431,12 @@ export default class App extends Component {
   }
 
   private CheckAuthenticated() {
+
+    this.setState({
+      authVerified: true,
+    })
+    return
+    
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
     try {

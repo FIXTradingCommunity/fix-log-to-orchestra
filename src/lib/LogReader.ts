@@ -5,11 +5,14 @@
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import TVFileParser, { TVFieldParser, TVMessageParser } from "./TVFileParser";
 
+let count = 0;
+
 /**
  * Reads FIX message logs
  */
 export default class LogReader {
-    static readonly encoding: string = "US-ASCII";
+    private static readonly encoding: string = "US-ASCII";
+    public messagesCount: number;
     private logFile: File;
     private progressNode: HTMLElement | null;
     private reader: FileReader = new FileReader();
@@ -22,6 +25,7 @@ export default class LogReader {
         this.progressNode = progressNode;
         this.messageListener = messageListener;
         this.progressFunc = progressFunc;
+        this.messagesCount = 0;
     }
     async readFile(): Promise<void> {
         const logParser: TVFileParser = new TVFileParser();
@@ -31,11 +35,13 @@ export default class LogReader {
         // continue while not eof and at least one message found per chunk
         let atLeastOneMessage: boolean = true;
         while (fileOffset < this.fileSize && atLeastOneMessage) {
+            // eslint-disable-next-line no-loop-func
             await this.readBytes(fileOffset, Math.min(chunkSize, this.fileSize - fileOffset)).then((chunk: string) => {
                 logParser.input = chunk;
                 atLeastOneMessage = false;
                 let messageResult: IteratorResult<TVMessageParser> = logParser.next();
                 while (!messageResult.done) {
+                    this.messagesCount++;
                     atLeastOneMessage = true;
                     const message: TVMessageParser = messageResult.value;
                     const messageInstance = new MessageInstance();

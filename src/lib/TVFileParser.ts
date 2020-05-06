@@ -132,6 +132,7 @@ export class TVMessageParser implements Iterator<TVFieldParser> {
  * Messages are not grossly malformed; this application is not expected to be a FIX validator.
  * Arbitrary delimiters and data between messages are to be ignored.
  */
+// tslint:disable-next-line: max-classes-per-file
 export default class TVFileParser implements Iterator<TVMessageParser> {
     static readonly messageStartDelimiter: string = "8=FIX";
     static readonly bodyLengthTag: string = "9";
@@ -157,9 +158,10 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
         if (messageStartOffset != -1) {
             const delimiterCharIndex = this.str.indexOf(TVFileParser.bodyLengthTag + "=", messageStartOffset) - 1;
             if (delimiterCharIndex === -1) {
-                // delimiter char not found
+                // delimiter not found
+                console.log("delimiter not found")
                 return {
-                    done: true,
+                    done: false,
                     value: TVMessageParser.nullMessageParser
                 };
             }
@@ -167,38 +169,23 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
             TVFileParser.fieldDelimiter = this.str.charAt(delimiterCharIndex);
             TVFieldParser.fieldDelimiter = TVFileParser.fieldDelimiter;
 
-            let field: TVFieldParser = new TVFieldParser(this.str, messageStartOffset);
-            let bodyLength: number;
-            if (field.next() && field.next() && field.tag === TVFileParser.bodyLengthTag) {
-                bodyLength = parseInt(field.value, 10);
+            const field: TVFieldParser = new TVFieldParser(this.str, messageStartOffset);
+
+            let lastTag = field && field.tag;
+            while (field && field.tag !== TVFileParser.checksumTag) {
+                field.next();
+                // Not checksum field found
+                if (!field.tag || !field) {
+                    return {
+                        done: true,
+                        value: TVMessageParser.nullMessageParser
+                    };
+                }
+                lastTag = field.tag;
             }
-            else {
-                // body length not found
-                return {
-                    done: true,
-                    // value can't be null according to iterator interface, so set dummy object
-                    value: TVMessageParser.nullMessageParser
-                };
-            }
-            const checksumOffet = field.offset + field.length + bodyLength;
-            field = new TVFieldParser(this.str, checksumOffet);
-            field.next();
-            if (field.tag === TVFileParser.checksumTag) {
-                bodyLength = parseInt(field.value, 10);
-            }
-            else {
-                // checksum not found
-                return {
-                    done: true,
-                    value: TVMessageParser.nullMessageParser
-                };
-            }
-            const messageEndTag: number = field.offset + field.length;
-            this.messageEndOffset = this.str.indexOf(TVFileParser.fieldDelimiter, messageEndTag);
-            // assertion
-            if (this.str.charAt(this.messageEndOffset) != TVFileParser.fieldDelimiter) {
-                throw new Error("Bad offset");
-            }
+
+            this.messageEndOffset = this.str.indexOf(TVFileParser.fieldDelimiter, field.offset);
+
             // return a parser for a found message
             return {
                 done: false,
