@@ -65,8 +65,6 @@ export default class App extends Component {
     results: undefined,
     showResults: false,
     authVerified: false,
-    results: undefined,
-    showResults: false,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -432,11 +430,6 @@ export default class App extends Component {
 
   private CheckAuthenticated() {
 
-    this.setState({
-      authVerified: true,
-    })
-    return
-    
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
     try {
@@ -474,18 +467,6 @@ export default class App extends Component {
       this.setState({
         authVerified: true,
       })
-
-      const userData = (decoded as IDecodedUserData);
-      Sentry.configureScope((scope) => {
-        scope.setUser({
-          Employer: userData.Employer,
-          email: userData.email,
-          firstname: userData.firstname,
-          groups: userData.groups,
-          lastname: userData.lastname,
-          sub: userData.sub,
-        });
-      });
 
     } catch (e) {
       Utility.Log(e);

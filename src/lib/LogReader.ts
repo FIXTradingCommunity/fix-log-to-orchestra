@@ -13,6 +13,7 @@ let count = 0;
 export default class LogReader {
     private static readonly encoding: string = "US-ASCII";
     public messagesCount: number;
+    public badMessagesCount: number;
     private logFile: File;
     private progressNode: HTMLElement | null;
     private reader: FileReader = new FileReader();
@@ -26,6 +27,7 @@ export default class LogReader {
         this.messageListener = messageListener;
         this.progressFunc = progressFunc;
         this.messagesCount = 0;
+        this.badMessagesCount = 0;
     }
     async readFile(): Promise<void> {
         const logParser: TVFileParser = new TVFileParser();
@@ -59,6 +61,8 @@ export default class LogReader {
             });
             fileOffset += logParser.lastMessageOffset;
         }
+        this.messagesCount -= logParser.unprocessedMessages;
+        this.badMessagesCount = logParser.unprocessedMessages;
     }
     private readBytes(offset: number, bytes: number): Promise<string> {
         return new Promise<string>((resolve, reject) => {

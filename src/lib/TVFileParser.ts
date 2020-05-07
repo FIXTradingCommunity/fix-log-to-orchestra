@@ -140,6 +140,7 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
     static fieldDelimiter: string = String.fromCharCode(1);
     private messageEndOffset: number = 0;
     private str: string = "";
+    public unprocessedMessages: number = 0;
     constructor() {
     }
     get lastMessageOffset(): number {
@@ -159,29 +160,28 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
             const delimiterCharIndex = this.str.indexOf(TVFileParser.bodyLengthTag + "=", messageStartOffset) - 1;
             if (delimiterCharIndex === -1) {
                 // delimiter not found
-                console.log("delimiter not found")
                 return {
                     done: false,
                     value: TVMessageParser.nullMessageParser
                 };
             }
-
+            
             TVFileParser.fieldDelimiter = this.str.charAt(delimiterCharIndex);
             TVFieldParser.fieldDelimiter = TVFileParser.fieldDelimiter;
-
+            
             const field: TVFieldParser = new TVFieldParser(this.str, messageStartOffset);
-
-            let lastTag = field && field.tag;
+            
             while (field && field.tag !== TVFileParser.checksumTag) {
                 field.next();
                 // Not checksum field found
-                if (!field.tag || !field) {
+                if (!field || !field.tag) {
+                    this.messageEndOffset = this.str.indexOf("=", messageStartOffset);
+                    this.unprocessedMessages++;
                     return {
-                        done: true,
-                        value: TVMessageParser.nullMessageParser
+                        done: false,
+                        value: new TVMessageParser(this.str, this.messageEndOffset)
                     };
                 }
-                lastTag = field.tag;
             }
 
             this.messageEndOffset = this.str.indexOf(TVFileParser.fieldDelimiter, field.offset);
