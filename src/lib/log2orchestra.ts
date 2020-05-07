@@ -25,7 +25,7 @@ export default class Log2Orchestra {
     private orchestraFileName: string;
     private logFiles: FileList;
     private configurationFile: File | undefined;
-    public onReferenceParsed: undefined | ((referenceModel: OrchestraModel) => void);
+    public onFinish: undefined | ((referenceModel: OrchestraModel, messagesCount: number) => void);
 
     constructor(referenceFile: File, logFiles: FileList, configurationFile: File | undefined, orchestraFileName: string, appendOnly: boolean, inputProgress: HTMLElement | null, outputProgress: HTMLElement | null, logProgress: HTMLElement | null, configProgress: HTMLElement | null,
         progressFunc: (progressNode: HTMLElement, percent: number) => void) {
@@ -52,10 +52,6 @@ export default class Log2Orchestra {
             input.extractOrchestraModel(referenceModel);
             ComponentRef.componentsModel = referenceModel.components;
             GroupRef.groupsModel = referenceModel.groups;
-
-            if (this.onReferenceParsed) {
-                this.onReferenceParsed(referenceModel);
-            }
 
             // it takes a bit of a data dictionary to parse FIX; inform FIX parser of special fields
             const lengthFieldIds: string[] = referenceModel.fields.getIdsByDatatype("Length");
@@ -86,6 +82,9 @@ export default class Log2Orchestra {
             for (let i = 0; i < this.logFiles.length; i++) {
                 const logReader: LogReader = new LogReader(this.logFiles[i], logModel.messageListener, this.logProgress, this.progressFunc);
                 await logReader.readFile();
+                if (this.onFinish) {
+                    this.onFinish(referenceModel, logReader.messagesCount);
+                }
             }
 
             // update the output Orchestra file from the model

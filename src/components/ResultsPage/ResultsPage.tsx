@@ -10,6 +10,7 @@ interface Props {
     fixMessageTypes: number;
     messageScenarios: number;
     userDefinedFields: number;
+    messagesCount: number;
   };
   downloadButton: JSX.Element;
   onClose: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -24,6 +25,7 @@ const ProgressCircle: React.FC<Props> = (props) => {
   let fixMessageTypes = 0;
   let messageScenarios = 0;
   let userDefinedFields = 0;
+  let messagesCount = 0;
   
   if (results) {
     componentScenarios = results.componentScenarios;
@@ -32,6 +34,7 @@ const ProgressCircle: React.FC<Props> = (props) => {
     fixMessageTypes = results.fixMessageTypes;
     messageScenarios = results.messageScenarios;
     userDefinedFields = results.userDefinedFields;
+    messagesCount = results.messagesCount;
   }
 
   return (
@@ -64,6 +67,10 @@ const ProgressCircle: React.FC<Props> = (props) => {
         <div className="resultsValueContainer">
           <div className="resultsLabel"># component scenarios discovered</div>
           <div className="resultsValue">{componentScenarios}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># FIX messages from log file processed</div>
+          <div className="resultsValue">{messagesCount}</div>
         </div>
         <div className="downloadButtonContainer">
           {downloadButton}

@@ -64,6 +64,7 @@ export default class App extends Component {
     downloaded: false,
     results: undefined,
     showResults: false,
+    authVerified: false,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -83,6 +84,9 @@ export default class App extends Component {
   }
 
   public render() {
+    if (!this.state.authVerified) {
+      return null
+    }
 
     return (
       <div className="App">
@@ -307,7 +311,7 @@ export default class App extends Component {
       progressNode.parentElement.style.visibility = "visible";
     }
   }
-  private handleReferenceParsed = (referenceModel: OrchestraModel) => {
+  private handleReaderFinish = (referenceModel: OrchestraModel, messagesCount: number) => {
     const fixMessageTypes = referenceModel.messages.size;
 
     const messageScenariosArray: string[] = [];
@@ -344,6 +348,7 @@ export default class App extends Component {
         components,
         fields,
         fixMessageTypes,
+        messagesCount,
         messageScenarios,
         userDefinedFields,
       }
@@ -366,7 +371,7 @@ export default class App extends Component {
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
       try {
-        runner.onReferenceParsed = this.handleReferenceParsed;
+        runner.onFinish = this.handleReaderFinish;
 
         await runner.run();
         this.setState({ creatingFile: false });
@@ -424,6 +429,7 @@ export default class App extends Component {
   }
 
   private CheckAuthenticated() {
+
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
     try {
@@ -457,6 +463,10 @@ export default class App extends Component {
           sub: userData.sub,
         });
       });
+
+      this.setState({
+        authVerified: true,
+      })
 
     } catch (e) {
       Utility.Log(e);
