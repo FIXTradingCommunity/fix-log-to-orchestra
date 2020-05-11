@@ -84,9 +84,9 @@ export default class App extends Component {
   }
 
   public render() {
-    if (!this.state.authVerified) {
-      return null
-    }
+    // if (!this.state.authVerified) {
+    //   return null
+    // }
 
     return (
       <div className="App">
@@ -113,7 +113,7 @@ export default class App extends Component {
               </div>
               <div className="field">
                 <FileInput
-                  label="FIX messsage log files"
+                  label="FIX message log files"
                   onChange={this.inputLogs}
                   ref={this.setLogFileBarRef as () => {}}
                   multiple={true}
@@ -231,7 +231,7 @@ export default class App extends Component {
   }
 
   public componentDidMount() {
-    this.CheckAuthenticated();
+    // this.CheckAuthenticated();
   }
 
   private handleClearFields() {
