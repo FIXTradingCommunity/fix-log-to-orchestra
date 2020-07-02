@@ -170,7 +170,7 @@ export default class App extends Component {
                   ? <button
                       type="button"
                       className="submitButton"
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.createOrchestra()}
+                      onClick={() => this.createOrchestra()}
                     >
                       {
                         this.state.creatingFile ? "Loading..." : "Create Orchestra file"
@@ -187,7 +187,7 @@ export default class App extends Component {
                     </a>
               }
               { (this.state.results && this.state.downloadHref) && <button className="clearFieldsButton showResultsButton" onClick={this.openResults}>Show Results</button> }
-              <button type="button" className="helpButton" onClick={(e: React.MouseEvent<HTMLButtonElement>) => this.setState({ showHelp: !this.state.showHelp })}>?</button>
+              <button type="button" className="helpButton" onClick={() => this.setState({ showHelp: !this.state.showHelp })}>Help</button>
             </div>
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
             <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>Clear Fields</button>
