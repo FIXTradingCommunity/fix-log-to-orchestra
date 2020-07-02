@@ -84,9 +84,9 @@ export default class App extends Component {
   }
 
   public render() {
-    // if (!this.state.authVerified) {
-    //   return null
-    // }
+    if (!this.state.authVerified) {
+      return null
+    }
 
     return (
       <div className="App">
