@@ -231,7 +231,7 @@ export default class App extends Component {
   }
 
   public componentDidMount() {
-    // this.CheckAuthenticated();
+    this.CheckAuthenticated();
   }
 
   private handleClearFields() {
