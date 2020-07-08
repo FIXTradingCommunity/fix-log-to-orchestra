@@ -430,6 +430,14 @@ export default class App extends Component {
 
   private CheckAuthenticated() {
 
+    if (process.env.NODE_ENV === "development") {
+      this.setState({
+        authVerified: true,
+      })
+      return;
+    }
+
+
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
     try {
@@ -471,9 +479,12 @@ export default class App extends Component {
     } catch (e) {
       Utility.Log(e);
 
+      const redirectUri = process.env.REACT_APP_REDIRECT_URL;
+      const clientId = process.env.REACT_APP_CLIENT_ID;
+
       window.location.href = "https://fixtrading.xecurify.com/moas/idp/openidsso?" +
-        "client_id=q63H8HNBTq00O4M&" +
-        "redirect_uri=https://log2orchestra.fixtrading.org/&" +
+        "client_id="+ clientId +"&" +
+        "redirect_uri="+ redirectUri + "&" +
         "scope=profile&" +
         "response_type=token&" +
         "state=123";
