@@ -7,10 +7,14 @@ import LogModel from "./LogModel";
 import MessageModel, { ComponentModel, ComponentRef, FieldContext, FieldModel, FieldRef, GroupModel, GroupRef } from "./MessageModel";
 import OrchestraModel, { CodesetsModel, ComponentsModel, FieldsModel, GroupsModel, MessagesModel } from "./OrchestraModel";
 import { IsSupportedfromString, Presence, PresencefromString, StructureModel } from "./StructureModel";
+import { KeyedCollection } from "./KeyedCollection";
+import { ActionViewArray } from "material-ui/svg-icons";
 
 export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
     static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra/repository";
+
+    private repositoryStatistics = new KeyedCollection<Number>();
 
     private file: File;
     private document: Document = new Document();
@@ -69,6 +73,9 @@ export default class OrchestraFile {
     }
     get size(): number {
         return this.file.size;
+    }
+    get statistics(): KeyedCollection<Number> {
+        return this.repositoryStatistics;
     }
     readFile(): Promise<void> {
         const reader = new FileReader();
@@ -139,6 +146,8 @@ export default class OrchestraFile {
         const messagesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const messagesElement: Element = messagesSnapshot.snapshotItem(0) as Element;
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        var countMessagesAdded : number = 0;
+        var countScenariosAdded : number = 0;
         Array.from(messages.values()).filter(m => m.uses > 0).forEach((message: MessageModel) => {
             let messageElement: Element | null = null;
             for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
@@ -160,10 +169,24 @@ export default class OrchestraFile {
                 const structureElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:structure");
                 messageElement.appendChild(structureElement);
                 this.addMembers(structureElement, message);
+                if (message.scenario === "base" )
+                    countMessagesAdded++;
+                else
+                    countScenariosAdded++;
+            }
+            else {
+            const scenario: string | null = messageElement.getAttribute("scenario");
+            if (!scenario || scenario === "base" || scenario === "")
+                countMessagesAdded++;
+            else
+                countScenariosAdded++;            
             }
         });
+        this.repositoryStatistics.Add("Messages.Added",countMessagesAdded);
+        this.repositoryStatistics.Add("Scenarios.Added",countScenariosAdded);
     }
     private addMembers(structureElement: Element, structure: StructureModel) {
+        var countMembersAdded : number = 0;
         structure.members.forEach(m => {
             if (m instanceof FieldRef) {
                 const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:fieldRef");
@@ -195,7 +218,9 @@ export default class OrchestraFile {
                 }
                 structureElement.appendChild(memberElement);
             }
+            countMembersAdded++;
         });
+        this.repositoryStatistics.Add("Members.Added",countMembersAdded);
     }
     private updateDomMetadata(): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
@@ -358,6 +383,7 @@ export default class OrchestraFile {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         const elementsToRemove = new Array<Element>();
+        var countMessagesRemoved : number = 0;
         let messageElement: Element = iterator.iterateNext() as Element;
         while (messageElement) {
             const elementName: string = messageElement.localName;
@@ -378,13 +404,16 @@ export default class OrchestraFile {
             const parent = element.parentElement;
             if (parent) {
                 parent.removeChild(element);
+                countMessagesRemoved++ ;
             }
         }
+        this.repositoryStatistics.Add("Messages.Removed",countMessagesRemoved);
     }
     private removeUnusedMessageMembers(messagesModel: MessagesModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         const elementsToRemove = new Array<Element>();
+        var countMembersRemoved : number = 0;
         let messageElement: Element = iterator.iterateNext() as Element;
         while (messageElement) {
             let elementName: string = messageElement.localName;
@@ -441,14 +470,19 @@ export default class OrchestraFile {
             const parent = element.parentElement;
             if (parent) {
                 parent.removeChild(element);
+                countMembersRemoved++;
             }
         }
+        this.repositoryStatistics.Add("Members.Unused", countMembersRemoved);
     }
     private updateDomCodes(codesetsModel: CodesetsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const codesetsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const codesetsElement: Element = codesetsSnapshot.snapshotItem(0) as Element;
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets/fixr:codeSet", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        var countCodesUsed : number = 0;
+        var countCustomCodes : number = 0;
+        var countCodesRemoved : number = 0;
         codesetsModel.forEach((codeset: CodesetModel) => {
             const usedCodes: CodeModel[] = codeset.getUsedCodes();
             const usedCodeValues: string[] = usedCodes.map((cs) => cs.value);
@@ -491,9 +525,11 @@ export default class OrchestraFile {
                         const code: CodeModel | undefined = codeset.getByValue(value);
                         if (code && code.uses > 0) {
                             codeElements[i].setAttribute("supported", "supported");
+                            countCodesUsed++;
                         }
                         else if (!this.appendOnly) {
                             codesetElement.removeChild(codeElements[i]);
+                            countCodesRemoved++;
                         }
                     }
                 }
@@ -509,16 +545,31 @@ export default class OrchestraFile {
                     codeElement.setAttribute("supported", "supported");
                     if (codesetElement) {
                         codesetElement.appendChild(codeElement);
+                        countCustomCodes++;
                     }
                 }
             });
         });
+        this.repositoryStatistics.Add("Codes.Used",countCodesUsed);
+        this.repositoryStatistics.Add("Codes.Removed",countCodesRemoved);
+        this.repositoryStatistics.Add("Codes.Added",countCustomCodes);
+    }
+    private isUserDefined(field: FieldModel) : boolean {
+        let tagNumber: number = +field.id;
+        if ((tagNumber >= 5000 && tagNumber <= 40000) || tagNumber >= 60000) {
+            return true;
+        }
+        return false;
     }
     private updateDomFields(fieldsModel: FieldsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const fieldsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const fieldsElement: Element = fieldsSnapshot.snapshotItem(0) as Element;
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields/fixr:field", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        let countFieldsUsed : number = 0;
+        let countFieldsRemoved : number = 0;
+        let countFieldsAdded : number = 0;
+        let countFieldsUserDefined : number = 0 ;
         fieldsModel.forEach((field: FieldModel) => {
             let fieldElement: Element | null = null;
             for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
@@ -530,6 +581,7 @@ export default class OrchestraFile {
                     break;
                 }
             }
+            
             if (!fieldElement) {
                 fieldElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:field");
                 fieldElement.setAttribute("name", field.name);
@@ -537,20 +589,34 @@ export default class OrchestraFile {
                 fieldElement.setAttribute("id", field.id);
                 fieldElement.setAttribute("type", field.datatype);
                 fieldsElement.appendChild(fieldElement);
+                countFieldsAdded++;
             }
             if (field.uses > 0) {
                 fieldElement.setAttribute("supported", "supported");
+                countFieldsUsed++;
+                if (this.isUserDefined(field)) {
+                    countFieldsUserDefined++;
+                }
             }
             else if (!this.appendOnly) {
                 fieldsElement.removeChild(fieldElement);
+                countFieldsRemoved++;
             }
+
         });
+        this.repositoryStatistics.Add("Fields.Used",countFieldsUsed);
+        this.repositoryStatistics.Add("Fields.Removed",countFieldsRemoved);
+        this.repositoryStatistics.Add("Fields.Added",countFieldsAdded);
+        this.repositoryStatistics.Add("Fields.UserDefined",countFieldsUserDefined);
     }
-    private addDomComponents(componentsModel: ComponentsModel): void {
+    private addDomComponents(componentsModel: ComponentsModel) {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const componentsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const componentsElement: Element = componentsSnapshot.snapshotItem(0) as Element;
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        var countComponentsUsed: number = 0;
+        var countComponentsRemoved : number = 0;
+        var countComponentsAdded : number = 0;
         componentsModel.forEach((component: ComponentModel) => {
             let componentElement: Element | null = null;
             for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
@@ -563,26 +629,36 @@ export default class OrchestraFile {
                 }
             }
             if (!componentElement) {
+
                 componentElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:component");
                 componentElement.setAttribute("name", component.name);
                 componentElement.setAttribute("scenario", component.scenario);
                 componentElement.setAttribute("id", component.id);
                 componentsElement.appendChild(componentElement);
                 this.addMembers(componentElement, component);
+                countComponentsAdded++;
             }
             if (component.uses > 0) {
                 componentElement.setAttribute("supported", "supported");
+                countComponentsUsed++;
             }
             else if (!this.appendOnly) {
                 componentsElement.removeChild(componentElement);
+                countComponentsRemoved++;
             }
         });
+        this.repositoryStatistics.Add("Components.Used", countComponentsUsed);
+        this.repositoryStatistics.Add("Components.Removed",countComponentsRemoved);
+        this.repositoryStatistics.Add("Components.Added",countComponentsAdded);
     }
     private addDomGroups(groupsModel: GroupsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const groupsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const groupsElement: Element = groupsSnapshot.snapshotItem(0) as Element;
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        var countGroupsUsed : number = 0;
+        var countGroupsRemoved : number = 0;
+        var countGroupsAdded : number = 0 ;
         groupsModel.forEach((group: GroupModel) => {
             let groupElement: Element | null = null;
             for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
@@ -604,14 +680,20 @@ export default class OrchestraFile {
                 numInGroupElement.setAttribute("id", group.numInGroup);
                 groupElement.appendChild(numInGroupElement);
                 this.addMembers(groupElement, group);
+                countGroupsAdded++;
             }
             if (group.uses > 0) {
                 groupElement.setAttribute("supported", "supported");
+                countGroupsUsed++;
             }
             else if (!this.appendOnly) {
                 groupsElement.removeChild(groupElement);
-            }
+                countGroupsRemoved++;
+            }           
         });
+        this.repositoryStatistics.Add("Groups.Used", countGroupsUsed);
+        this.repositoryStatistics.Add("Groups.Removed", countGroupsRemoved);
+        this.repositoryStatistics.Add("Groups.Added", countGroupsAdded);
     }
     private removeUnusedComponentMembers(componentsModel: ComponentsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
