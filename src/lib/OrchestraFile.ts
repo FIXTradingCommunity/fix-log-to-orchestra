@@ -245,14 +245,14 @@ export default class OrchestraFile {
     contents(): Blob {
         return new Blob([OrchestraFile.serialize(this.document)], { type: OrchestraFile.MIME_TYPE });
     }
-    public extractOrchestraModel(orchestraModel: OrchestraModel) {
-        this.extractFieldsModel(orchestraModel.fields);
-        this.extractCodesetsModel(orchestraModel.codesets);
-        this.extractComponentsModel(orchestraModel.components);
-        this.extractGroupsModel(orchestraModel.groups);
-        this.extractMessagesModel(orchestraModel.messages);
+    public populateOrchestraModelFromDom(orchestraModel: OrchestraModel) {
+        this.populateFieldsModelFromDom(orchestraModel.fields);
+        this.populateCodesetsModelFromDom(orchestraModel.codesets);
+        this.populateComponentsModelFromDom(orchestraModel.components);
+        this.populateGroupsModelFromDom(orchestraModel.groups);
+        this.poulateMessagesModelFromDom(orchestraModel.messages);
     }
-    private extractFieldsModel(fieldsModel: FieldsModel): void {
+    private populateFieldsModelFromDom(fieldsModel: FieldsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields/fixr:field", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let element: Element = iterator.iterateNext() as Element;
@@ -270,7 +270,7 @@ export default class OrchestraFile {
             element = iterator.iterateNext() as Element;
         }
     }
-    private extractCodesetsModel(codesetsModel: CodesetsModel): void {
+    private populateCodesetsModelFromDom(codesetsModel: CodesetsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets/fixr:codeSet", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let codesetElement: Element = iterator.iterateNext() as Element;
@@ -302,7 +302,7 @@ export default class OrchestraFile {
             codesetElement = iterator.iterateNext() as Element;
         }
     }
-    private extractComponentsModel(componentsModel: ComponentsModel): void {
+    private populateComponentsModelFromDom(componentsModel: ComponentsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let componentElement: Element = iterator.iterateNext() as Element;
@@ -324,7 +324,7 @@ export default class OrchestraFile {
             componentElement = iterator.iterateNext() as Element;
         }
     }
-    private extractGroupsModel(groupsModel: GroupsModel): void {
+    private populateGroupsModelFromDom(groupsModel: GroupsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let groupElement: Element = iterator.iterateNext() as Element;
@@ -353,7 +353,7 @@ export default class OrchestraFile {
             groupElement = iterator.iterateNext() as Element;
         }
     }
-    private extractMessagesModel(messagesModel: MessagesModel): void {
+    private poulateMessagesModelFromDom(messagesModel: MessagesModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let messageElement: Element = iterator.iterateNext() as Element;

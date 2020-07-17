@@ -49,7 +49,7 @@ export default class Log2Orchestra {
 
             // populate model from reference Orchestra file
             const referenceModel: OrchestraModel = new OrchestraModel();
-            input.extractOrchestraModel(referenceModel);
+            input.populateOrchestraModelFromDom(referenceModel);
             ComponentRef.componentsModel = referenceModel.components;
             GroupRef.groupsModel = referenceModel.groups;
 
@@ -64,8 +64,8 @@ export default class Log2Orchestra {
             // clones reference dom to output file
             output.dom = input.cloneDom();
 
-            const outreferenceModel: OrchestraModel = new OrchestraModel();
-            output.extractOrchestraModel(outreferenceModel);
+            //const outreferenceModel: OrchestraModel = new OrchestraModel();
+            //output.extractOrchestraModel(outreferenceModel);
 
             const logModel: LogModel = new LogModel(referenceModel);
 
