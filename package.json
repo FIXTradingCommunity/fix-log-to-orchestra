@@ -11,12 +11,13 @@
     "@types/node": "10.12.12",
     "@types/react": "^16.9.17",
     "@types/react-dom": "16.0.11",
+    "env-cmd": "^10.1.0",
     "jsonwebtoken": "^8.5.1",
     "query-string": "^6.8.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-dropzone": "^10.2.1",
-    "react-scripts": "3.3.0",
+    "react-scripts": "^3.4.1",
     "serve": "^11.0.2",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.17.0",
@@ -24,8 +25,9 @@
     "typescript": "3.2.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "env-cmd -f .env.local react-scripts start",
+    "build:dev": "env-cmd -f .env.development react-scripts build",
+    "build:prod": "env-cmd -f .env.production react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

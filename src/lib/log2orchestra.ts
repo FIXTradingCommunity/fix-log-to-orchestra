@@ -25,7 +25,7 @@ export default class Log2Orchestra {
     private orchestraFileName: string;
     private logFiles: FileList;
     private configurationFile: File | undefined;
-    public onFinish: undefined | ((referenceModel: OrchestraModel, messagesCount: number) => void);
+    public onFinish: undefined | ((output: OrchestraFile, messagesCount: number) => void);
 
     constructor(referenceFile: File, logFiles: FileList, configurationFile: File | undefined, orchestraFileName: string, appendOnly: boolean, inputProgress: HTMLElement | null, outputProgress: HTMLElement | null, logProgress: HTMLElement | null, configProgress: HTMLElement | null,
         progressFunc: (progressNode: HTMLElement, percent: number) => void) {
@@ -49,7 +49,7 @@ export default class Log2Orchestra {
 
             // populate model from reference Orchestra file
             const referenceModel: OrchestraModel = new OrchestraModel();
-            input.extractOrchestraModel(referenceModel);
+            input.populateOrchestraModelFromDom(referenceModel);
             ComponentRef.componentsModel = referenceModel.components;
             GroupRef.groupsModel = referenceModel.groups;
 
@@ -64,8 +64,8 @@ export default class Log2Orchestra {
             // clones reference dom to output file
             output.dom = input.cloneDom();
 
-            const outreferenceModel: OrchestraModel = new OrchestraModel();
-            output.extractOrchestraModel(outreferenceModel);
+            //const outreferenceModel: OrchestraModel = new OrchestraModel();
+            //output.extractOrchestraModel(outreferenceModel);
 
             const logModel: LogModel = new LogModel(referenceModel);
 
@@ -77,18 +77,21 @@ export default class Log2Orchestra {
             } else {
                 logModel.messageScenarioKeys = ConfigurationFile.defaultKeys;
             }
-
+            var totalMessages : number = 0;
             // read and parse one or more FIX logs 
             for (let i = 0; i < this.logFiles.length; i++) {
                 const logReader: LogReader = new LogReader(this.logFiles[i], logModel.messageListener, this.logProgress, this.progressFunc);
                 await logReader.readFile();
                 if (this.onFinish) {
-                    this.onFinish(referenceModel, logReader.messagesCount);
+                    totalMessages = logReader.messagesCount;
                 }
-            }
 
+            }
             // update the output Orchestra file from the model
             output.updateDomFromModel(logModel, this.outputProgress);
+            if (this.onFinish) {
+                this.onFinish(output, totalMessages);
+            }
             this.blob = output.contents();
             return new Promise<Blob>(resolve =>
                 resolve(this.blob)

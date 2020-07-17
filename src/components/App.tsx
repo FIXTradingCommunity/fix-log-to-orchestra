@@ -231,7 +231,7 @@ export default class App extends Component {
   }
 
   public componentDidMount() {
-    // this.CheckAuthenticated();
+    this.CheckAuthenticated();
   }
 
   private handleClearFields() {
@@ -311,36 +311,22 @@ export default class App extends Component {
       progressNode.parentElement.style.visibility = "visible";
     }
   }
-  private handleReaderFinish = (referenceModel: OrchestraModel, messagesCount: number) => {
-    const fixMessageTypes = referenceModel.messages.size;
+  private handleReaderFinish = (output: OrchestraFile, messagesCount: number) => {
 
-    const messageScenariosArray: string[] = [];
-    for (const [_, value] of referenceModel.messages) {
-      if (!messageScenariosArray.includes(value.scenario)) {
-        messageScenariosArray.push(value.scenario);
-      }
-    }
-    const messageScenarios = messageScenariosArray.length;
+  //return the values from the statistics dictionary
 
-    const fields = referenceModel.fields.size;
+    const fixMessageTypes = output.statistics.Item("Messages.Added");
 
-    let userDefinedFields = 0;
-    for (const [_, value] of referenceModel.fields) {
-      const key = parseInt(value.id, 10);
-      if ((key >= 5000 && key <= 40000) || key >= 50000 ) {
-        userDefinedFields++;
-      }
-    }
+    const messageScenarios = output.statistics.Item("Scenarios.Added");
 
-    const components = referenceModel.components.size;
+    const fields = output.statistics.Item("Fields.Used");
 
-    const componentScenariosArray: string[] = [];
-    for (const [_, value] of referenceModel.messages) {
-      if (!componentScenariosArray.includes(value.scenario)) {
-        componentScenariosArray.push(value.scenario);
-      }
-    }
-    const componentScenarios = componentScenariosArray.length;
+    const userDefinedFields = output.statistics.Item("Fields.UserDefined");
+
+    const components = output.statistics.Item("Components.Used");
+
+    const componentScenarios = 0;  // Needs to be implemented
+
 
     this.setState({
       results: {
@@ -430,39 +416,47 @@ export default class App extends Component {
 
   private CheckAuthenticated() {
 
+    if (process.env.NODE_ENV === "development") {
+      this.setState({
+        authVerified: true,
+      })
+      return;
+    }
+
+
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
     try {
-      const decoded: null | object | string = jwt.decode(id_token);
-      if (!decoded) {
-        throw new Error("unauthenticated");
-      }
-      /*if (decoded['exp']) {
-        const sec = decoded['exp'] as number;
-        const date: Date = new Date(0);
-        date.setUTCSeconds(sec);
-        const now: Date = new Date();
-        if (date < now) {
-          throw new Error("expired");
-        }
-      }*/
+      // const decoded: null | object | string = jwt.decode(id_token);
+      // if (!decoded) {
+      //   throw new Error("unauthenticated");
+      // }
+      // /*if (decoded['exp']) {
+      //   const sec = decoded['exp'] as number;
+      //   const date: Date = new Date(0);
+      //   date.setUTCSeconds(sec);
+      //   const now: Date = new Date();
+      //   if (date < now) {
+      //     throw new Error("expired");
+      //   }
+      // }*/
 
-      const verified: object | string = jwt.verify(id_token, Utility.GetMOPublicKey());
-      if (!verified) {
-        throw new Error("unauthenticated");
-      }
+      // const verified: object | string = jwt.verify(id_token, Utility.GetMOPublicKey());
+      // if (!verified) {
+      //   throw new Error("unauthenticated");
+      // }
 
-      const userData = (decoded as IDecodedUserData);
-      Sentry.configureScope((scope) => {
-        scope.setUser({
-          Employer: userData.Employer,
-          email: userData.email,
-          firstname: userData.firstname,
-          groups: userData.groups,
-          lastname: userData.lastname,
-          sub: userData.sub,
-        });
-      });
+      // const userData = (decoded as IDecodedUserData);
+      // Sentry.configureScope((scope) => {
+      //   scope.setUser({
+      //     Employer: userData.Employer,
+      //     email: userData.email,
+      //     firstname: userData.firstname,
+      //     groups: userData.groups,
+      //     lastname: userData.lastname,
+      //     sub: userData.sub,
+      //   });
+      // });
 
       this.setState({
         authVerified: true,
@@ -471,9 +465,12 @@ export default class App extends Component {
     } catch (e) {
       Utility.Log(e);
 
+      const redirectUri = process.env.REACT_APP_REDIRECT_URL;
+      const clientId = process.env.REACT_APP_CLIENT_ID;
+
       window.location.href = "https://fixtrading.xecurify.com/moas/idp/openidsso?" +
-        "client_id=q63H8HNBTq00O4M&" +
-        "redirect_uri=https://log2orchestra.fixtrading.org/&" +
+        "client_id="+ clientId +"&" +
+        "redirect_uri="+ redirectUri + "&" +
         "scope=profile&" +
         "response_type=token&" +
         "state=123";
