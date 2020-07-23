@@ -629,7 +629,10 @@ export default class OrchestraFile {
                 }
             }
             if (!componentElement) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/master
                 componentElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:component");
                 componentElement.setAttribute("name", component.name);
                 componentElement.setAttribute("scenario", component.scenario);

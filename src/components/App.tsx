@@ -462,6 +462,10 @@ export default class App extends Component {
         authVerified: true,
       })
 
+      this.setState({
+        authVerified: true,
+      })
+
     } catch (e) {
       Utility.Log(e);
 
