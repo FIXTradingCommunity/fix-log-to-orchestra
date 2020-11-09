@@ -60,7 +60,7 @@ class FileInput extends Component<Props> {
                         <ProgressCircle value={pct} />
                         <div className="inputContent">
                           <p className="inputText">Drag file to upload or</p>
-                          <div className="chooseFileButton">Chose File{multiple ? "s" : ""}</div>
+                          <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}
                         { error && <p className="fileName inputTextError">{error}</p> }
