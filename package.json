@@ -1,6 +1,6 @@
 {
   "name": "log2orchestra",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.8.3",
@@ -11,6 +11,7 @@
     "@types/node": "10.12.12",
     "@types/react": "^16.9.17",
     "@types/react-dom": "16.0.11",
+    "@types/vkbeautify": "^0.99.2",
     "env-cmd": "^10.1.0",
     "jsonwebtoken": "^8.5.1",
     "query-string": "^6.8.1",
@@ -18,11 +19,12 @@
     "react-dom": "^16.12.0",
     "react-dropzone": "^10.2.1",
     "react-scripts": "^3.4.1",
-    "serve": "^11.0.2",
+    "serve": "^11.3.2",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.17.0",
     "tslint-react": "^3.6.0",
-    "typescript": "3.2.2"
+    "typescript": "3.2.2",
+    "vkbeautify": "^0.99.3"
   },
   "scripts": {
     "start": "env-cmd -f .env.local react-scripts start",
