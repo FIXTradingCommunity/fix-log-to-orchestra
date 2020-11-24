@@ -8,7 +8,8 @@ import MessageModel, { ComponentModel, ComponentRef, FieldContext, FieldModel, F
 import OrchestraModel, { CodesetsModel, ComponentsModel, FieldsModel, GroupsModel, MessagesModel } from "./OrchestraModel";
 import { IsSupportedfromString, Presence, PresencefromString, StructureModel } from "./StructureModel";
 import { KeyedCollection } from "./KeyedCollection";
-import { ActionViewArray } from "material-ui/svg-icons";
+//import { ActionViewArray } from "material-ui/svg-icons";
+import {xml} from "vkbeautify";
 
 export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
@@ -45,7 +46,8 @@ export default class OrchestraFile {
     }
     static serialize(document: Document): string {
         const serializer = new XMLSerializer();
-        return serializer.serializeToString(document);
+        const text = serializer.serializeToString(document);
+        return xml(text, 2);
     }
     static getErrorMessage(textContent: string | null): string {
         if (!textContent) return "Error parsing XML";
