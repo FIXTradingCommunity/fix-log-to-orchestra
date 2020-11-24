@@ -304,7 +304,7 @@ export default class App extends Component {
         progressNode.setProgress(percent);
       }
 
-    } else {
+    } else if (progressNode) {
       progressNode.style.backgroundColor = "red";
     }
     if (progressNode.parentElement) {

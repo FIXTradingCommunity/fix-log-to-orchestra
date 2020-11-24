@@ -14,7 +14,7 @@ export default class MessageInstance extends Array<FieldInstance> {
      */
     get msgType(): string | undefined {
         const msgTypeField: FieldInstance = this[2];
-        if (msgTypeField.tag === "35" && msgTypeField.value) {
+        if (msgTypeField && msgTypeField.tag === "35" && msgTypeField.value) {
             return msgTypeField.value;
         }
         else {
