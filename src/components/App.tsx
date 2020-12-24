@@ -130,6 +130,12 @@ export default class App extends Component {
                 />
               </div>
             </div>
+            {
+              this.state.showAlerts && 
+              <div className="errorContainer">
+                <textarea readOnly={true} className="errorMessage" value={this.alertMsg}></textarea>
+              </div>
+            }
             <h2>Output</h2>
             <div className="field">
               <TextField
@@ -192,12 +198,6 @@ export default class App extends Component {
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
             <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>Clear Fields</button>
             <output id="output"></output>
-            {
-              this.state.showAlerts && 
-              <div className="errorContainer">
-                <textarea readOnly={true} className="errorMessage" value={this.alertMsg}></textarea>
-              </div>
-            }
           </div>
           {this.state.showHelp && !this.state.showAlerts && <Help />}
         </div>
