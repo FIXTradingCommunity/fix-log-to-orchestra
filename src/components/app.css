@@ -97,12 +97,18 @@ h3 {
     text-align: center;
 }
 
+h4 {
+    margin: 0 0 0 10px;
+    font-size: 14px;
+    color: red;
+}
+
 p {
     font-family: Verdana;
     margin-top: 0em;
     margin-bottom: 1em;
     font-size: small;
-	color: black;
+	  color: black;
 }
 
 img {
@@ -236,17 +242,25 @@ footer p {
 }
 
 .errorContainer {
-    margin-top: 20px;
     width: 100%;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding: 10px;
+    resize: both;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 .errorMessage {
-    color: red;
     width: 100%;
-    height: 100%;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 10px;
+    height: calc(100% - 10px);
     padding: 10px;
+    border: none;
+    resize: none;
+    outline: none;
+    overflow: hidden;
+    color: red;
 }
 
 #output {

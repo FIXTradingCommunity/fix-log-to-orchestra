@@ -133,6 +133,7 @@ export default class App extends Component {
             {
               this.state.showAlerts && 
               <div className="errorContainer">
+                <h4>{`Your input orchestra file ${this.referenceFile && `named '${this.referenceFile.name}'`} is invalid or empty`}</h4>
                 <textarea readOnly={true} className="errorMessage" value={this.alertMsg}></textarea>
               </div>
             }
@@ -304,7 +305,7 @@ export default class App extends Component {
         progressNode.setProgress(percent);
       }
 
-    } else if (progressNode) {
+    } else if (progressNode.style) {
       progressNode.style.backgroundColor = "red";
     }
     if (progressNode.parentElement) {
