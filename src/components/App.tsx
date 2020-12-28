@@ -192,14 +192,24 @@ export default class App extends Component {
                     </a>
               }
               { (this.state.results && this.state.downloadHref) && <button className="clearFieldsButton showResultsButton" onClick={this.openResults}>Show Results</button> }
-              <a
-                className="redirectButton"
-                href="http://fixprotocol.io/orchestratools/log2orchestra/v1.0/configuration-help.html"
-                rel="noreferrer noopener"
-                target="_blank"
-              >
-                Help
-              </a>
+              <div className="redirectButtonContainers">
+                <a
+                  className="redirectButton"
+                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  Terms of Service
+                </a>
+                <a
+                  className="redirectButton"
+                  href="http://fixprotocol.io/orchestratools/log2orchestra/v1.0/configuration-help.html"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  Help
+                </a>
+              </div>
             </div>
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
             <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>Clear Fields</button>

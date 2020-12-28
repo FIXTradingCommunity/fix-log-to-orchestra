@@ -225,6 +225,13 @@ footer p {
     background-color: #006c9a;
 }
 
+.redirectButtonContainers {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
 .redirectButton {
     background: none;
     margin: 0 10px;
