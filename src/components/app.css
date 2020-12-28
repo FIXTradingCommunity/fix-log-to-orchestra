@@ -194,6 +194,7 @@ footer p {
     width: 100%;
     display: flex;
     justify-content: space-between;
+    margin-top: 20px;
 }
 
 .submitButton {
@@ -208,7 +209,6 @@ footer p {
     color: #FFFFFF;
     font-weight: 500;
     font-size: 14px;
-    margin-top: 20px;
     cursor: pointer;
     text-align: center;
 }
@@ -225,20 +225,19 @@ footer p {
     background-color: #006c9a;
 }
 
-.helpButton {
+.redirectButton {
     background: none;
-    margin: 0;
+    margin: 0 10px;
+    padding-top: 8px;
+    height: 36px;
+    width: 150px;
     border: 2px solid #c7c7c7;
-    height: 46px;
-    min-width: 210px;
     border-radius: 23px;
     color: #009FE3;
     font-weight: 500;
-    font-size: 18px;
-    margin-top: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
+    font-size: 14px;
     cursor: pointer;
+    text-align: center;
 }
 
 .errorContainer {
