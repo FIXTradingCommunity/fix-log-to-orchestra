@@ -16,7 +16,6 @@ import OrchestraModel from '../lib/OrchestraModel';
 import Utility from '../lib/utility';
 import './app.css';
 import FileInput from './FileInput/FileInput';
-import Help from "./Help/Help";
 import ProgressBar from './ProgressBar/ProgressBar';
 import ResultsPage from './ResultsPage/ResultsPage';
 
@@ -57,7 +56,6 @@ export default class App extends Component {
     orchestraFileNameError: "",
     referenceFileError: "",
     showAlerts: false,
-    showHelp: false,
     downloadHref: "",
     downloadUrl: "",
     creatingFile: false,
@@ -194,13 +192,29 @@ export default class App extends Component {
                     </a>
               }
               { (this.state.results && this.state.downloadHref) && <button className="clearFieldsButton showResultsButton" onClick={this.openResults}>Show Results</button> }
-              <button type="button" className="helpButton" onClick={() => this.setState({ showHelp: !this.state.showHelp })}>Help</button>
+              <div className="redirectButtonContainers">
+                <a
+                  className="redirectButton"
+                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  Terms of Service
+                </a>
+                <a
+                  className="redirectButton"
+                  href="http://fixprotocol.io/orchestratools/log2orchestra/v1.0/configuration-help.html"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  Help
+                </a>
+              </div>
             </div>
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
             <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>Clear Fields</button>
             <output id="output"></output>
           </div>
-          {this.state.showHelp && !this.state.showAlerts && <Help />}
         </div>
         <footer className="container">
           <p>Version {version}</p>
