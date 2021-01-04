@@ -217,6 +217,12 @@ footer p {
     background-color: #4eb767;
 }
 
+.submitButton:disabled {
+  background-color: #CCC;
+  color: #666666;
+  cursor: auto;
+}
+
 .downloadButton {
     background-color: #009FE3;
 }
