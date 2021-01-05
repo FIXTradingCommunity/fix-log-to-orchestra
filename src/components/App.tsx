@@ -106,7 +106,7 @@ export default class App extends Component {
                   onChange={this.inputOrchestra}
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
-                  clearError={() => { this.setState({ referenceFileError: "" })}}
+                  clearError={() => { this.setState({ referenceFileError: "", showAlerts: "" })}}
                 />
               </div>
               <div className="field">
@@ -176,6 +176,11 @@ export default class App extends Component {
                       type="button"
                       className="submitButton"
                       onClick={() => this.createOrchestra()}
+                      disabled={
+                        this.state.showAlerts ||
+                        Boolean(this.state.logFilesError) ||
+                        Boolean(this.state.orchestraFileNameError) ||
+                        Boolean(this.state.referenceFileError)}
                     >
                       {
                         this.state.creatingFile ? "Loading..." : "Create Orchestra file"
@@ -271,6 +276,7 @@ export default class App extends Component {
     if (this.configurationProgress instanceof FileInput) {
       this.configurationProgress.clear()
     }
+    this.setState({ showAlerts: false });
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {
