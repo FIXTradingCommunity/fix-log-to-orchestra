@@ -1,0 +1,9 @@
+Once provided a .rar from [~ignacio.sormani@tradehelm.com],
+1. unzipped the rar file into a local directory
+2. established ssh to server instance
+3. change file ownership to ubuntu (sudo chown -R ubuntu .)
+4. copy files from local directory to log2orchestra/build
+5. remove old .js file
+6. change file ownership back to log2orchestra (sudo chown -R log2orchestra .)
+
+Test application is servered log2orchestra.fixtrading.org
