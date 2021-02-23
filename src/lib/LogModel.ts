@@ -71,10 +71,10 @@ export default class LogModel {
                     }
                 }
                 // No matching message scenario so create it by cloning the default scenario            
-                const index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
+                const messageIndex = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
                 let scenarioToClone: MessageModel;
-                if (index != -1) {
-                    scenarioToClone = messageModels[index];
+                if (messageIndex !== -1) {
+                    scenarioToClone = messageModels[messageIndex];
                 }
                 else {
                     // No default scenario, fall back to the first one encountered
@@ -90,7 +90,7 @@ export default class LogModel {
             }
             // No match found, so return default scenario
             const index = messageModels.findIndex(m => m.scenario === MessageModel.defaultScenario);
-            if (index != -1) {
+            if (index !== -1) {
                 const defaultScenario: MessageModel = messageModels[index];
                 return defaultScenario;
             }

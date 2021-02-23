@@ -158,6 +158,8 @@ export default class OrchestraFile {
                 const scenario: string = node.getAttribute("scenario") || "base";
                 if (message.name === name && message.scenario === scenario) {
                     messageElement = node;
+                    const structureElement = messageElement.getElementsByTagName("fixr:structure")[0];
+                    this.addDomMembers(structureElement, message);
                     break;
                 }
             }
@@ -170,7 +172,7 @@ export default class OrchestraFile {
                 messagesElement.appendChild(messageElement);
                 const structureElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:structure");
                 messageElement.appendChild(structureElement);
-                this.addMembers(structureElement, message);
+                this.addDomMembers(structureElement, message);
                 if (message.scenario === "base" )
                     countMessagesAdded++;
                 else
@@ -187,43 +189,91 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Messages.Added",countMessagesAdded);
         this.repositoryStatistics.Add("Scenarios.Added",countScenariosAdded);
     }
-    private addMembers(structureElement: Element, structure: StructureModel) {
+    private addDomMembers(structureElement: Element, structure: StructureModel) {
+        const fieldRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:fieldRef");
+        const componentRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:componentRef");
+        const groupRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:groupRef");
         var countMembersAdded : number = 0;
         structure.members.forEach(m => {
-            if (m instanceof FieldRef) {
-                const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:fieldRef");
-                memberElement.setAttribute("id", m.id);
-                memberElement.setAttribute("presence", m.presence.toString());
-                if (m.value) {
-                    memberElement.setAttribute("value", m.value);
+            if (m.uses > 0) {
+                var found = false;
+                if (m instanceof FieldRef) {
+                    for (let i: number = 0; i < fieldRefElements.length; i++) {
+                        const id: string | null = fieldRefElements[i].getAttribute("id");
+                        const scenario: string | null = fieldRefElements[i].getAttribute("scenario") || "base";
+                        if (m.id === id && m.scenario === scenario) {
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        this.addDomFieldRef(m, structureElement);
+                        countMembersAdded++;
+                    }
                 }
-                if (m.field && (m.field.scenario != FieldRef.defaultScenario)) {
-                    memberElement.setAttribute("scenario", m.field.scenario);
+                else if (m instanceof ComponentRef) {
+                    for (let i: number = 0; i < componentRefElements.length; i++) {
+                        const id: string | null = componentRefElements[i].getAttribute("id");
+                        const scenario: string | null = componentRefElements[i].getAttribute("scenario") || "base";
+                        if (m.id === id && m.scenario === scenario) {
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        this.addDomComponentRef(m, structureElement);
+                        countMembersAdded++;
+                    }
                 }
-                structureElement.appendChild(memberElement);
+                else if (m instanceof GroupRef) {
+                    for (let i: number = 0; i < groupRefElements.length; i++) {
+                        const id: string | null = groupRefElements[i].getAttribute("id");
+                        const scenario: string | null = groupRefElements[i].getAttribute("scenario") || "base";
+                        if (m.id === id && m.scenario === scenario) {
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        this.addDomGroupRef(m, structureElement);
+                        countMembersAdded++;
+                    }
+                }              
             }
-            else if (m instanceof ComponentRef) {
-                const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:componentRef");
-                memberElement.setAttribute("id", m.id);
-                memberElement.setAttribute("presence", m.presence.toString());
-                if (m.scenario != FieldRef.defaultScenario) {
-                    memberElement.setAttribute("scenario", m.scenario);
-                }
-                structureElement.appendChild(memberElement);
-            }
-            else if (m instanceof GroupRef) {
-                const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:groupRef");
-                memberElement.setAttribute("id", m.id);
-                memberElement.setAttribute("presence", m.presence.toString());
-                if (m.scenario != FieldRef.defaultScenario) {
-                    memberElement.setAttribute("scenario", m.scenario);
-                }
-                structureElement.appendChild(memberElement);
-            }
-            countMembersAdded++;
         });
         this.repositoryStatistics.Add("Members.Added",countMembersAdded);
     }
+
+    private addDomGroupRef(m: GroupRef, structureElement: Element): void {
+        const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:groupRef");
+        memberElement.setAttribute("id", m.id);
+        memberElement.setAttribute("presence", m.presence.toString());
+        if (m.scenario !== FieldRef.defaultScenario) {
+            memberElement.setAttribute("scenario", m.scenario);
+        }
+        structureElement.appendChild(memberElement);
+    }
+
+    private addDomComponentRef(m: ComponentRef, structureElement: Element): void {
+        const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:componentRef");
+        memberElement.setAttribute("id", m.id);
+        memberElement.setAttribute("presence", m.presence.toString());
+        if (m.scenario !== FieldRef.defaultScenario) {
+            memberElement.setAttribute("scenario", m.scenario);
+        }
+        structureElement.appendChild(memberElement);
+    }
+
+    private addDomFieldRef(m: FieldRef, structureElement: Element): void {
+        const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:fieldRef");
+        memberElement.setAttribute("id", m.id);
+        memberElement.setAttribute("presence", m.presence.toString());
+        if (m.value) {
+            memberElement.setAttribute("value", m.value);
+        }
+        if (m.field && (m.field.scenario !== FieldRef.defaultScenario)) {
+            memberElement.setAttribute("scenario", m.field.scenario);
+        }
+        structureElement.appendChild(memberElement);
+    }
+
     private updateDomMetadata(): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:metadata", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -636,7 +686,7 @@ export default class OrchestraFile {
                 componentElement.setAttribute("scenario", component.scenario);
                 componentElement.setAttribute("id", component.id);
                 componentsElement.appendChild(componentElement);
-                this.addMembers(componentElement, component);
+                this.addDomMembers(componentElement, component);
                 countComponentsAdded++;
             }
             if (component.uses > 0) {
@@ -680,7 +730,7 @@ export default class OrchestraFile {
                 const numInGroupElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:numInGroup");
                 numInGroupElement.setAttribute("id", group.numInGroup);
                 groupElement.appendChild(numInGroupElement);
-                this.addMembers(groupElement, group);
+                this.addDomMembers(groupElement, group);
                 countGroupsAdded++;
             }
             if (group.uses > 0) {
