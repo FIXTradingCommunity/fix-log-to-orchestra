@@ -48,6 +48,10 @@ interface IDecodedUserData {
   email: string;
 }
 
+interface IDecoded {
+  exp?: number;
+}
+
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
 
@@ -448,40 +452,36 @@ export default class App extends Component {
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
     try {
-      // const decoded: null | object | string = jwt.decode(id_token);
-      // if (!decoded) {
-      //   throw new Error("unauthenticated");
-      // }
-      // /*if (decoded['exp']) {
-      //   const sec = decoded['exp'] as number;
-      //   const date: Date = new Date(0);
-      //   date.setUTCSeconds(sec);
-      //   const now: Date = new Date();
-      //   if (date < now) {
-      //     throw new Error("expired");
-      //   }
-      // }*/
+      const decoded: null | IDecoded | string = jwt.decode(id_token);
+      if (!decoded) {
+        throw new Error("unauthenticated");
+      }
+      if (typeof decoded !== "string" && decoded.exp) {
+        const sec = decoded.exp as number;
+        const date: Date = new Date(0);
+        date.setUTCSeconds(sec);
+        const now: Date = new Date();
+        if (date < now) {
+          throw new Error("expired");
+        }
+      }
 
-      // const verified: object | string = jwt.verify(id_token, Utility.GetMOPublicKey());
-      // if (!verified) {
-      //   throw new Error("unauthenticated");
-      // }
+      const verified: object | string = jwt.verify(id_token, Utility.GetMOPublicKey());
+      if (!verified) {
+        throw new Error("unauthenticated");
+      }
 
-      // const userData = (decoded as IDecodedUserData);
-      // Sentry.configureScope((scope) => {
-      //   scope.setUser({
-      //     Employer: userData.Employer,
-      //     email: userData.email,
-      //     firstname: userData.firstname,
-      //     groups: userData.groups,
-      //     lastname: userData.lastname,
-      //     sub: userData.sub,
-      //   });
-      // });
-
-      this.setState({
-        authVerified: true,
-      })
+      const userData = (decoded as IDecodedUserData);
+      Sentry.configureScope((scope) => {
+        scope.setUser({
+          Employer: userData.Employer,
+          email: userData.email,
+          firstname: userData.firstname,
+          groups: userData.groups,
+          lastname: userData.lastname,
+          sub: userData.sub,
+        });
+      });
 
       this.setState({
         authVerified: true,
