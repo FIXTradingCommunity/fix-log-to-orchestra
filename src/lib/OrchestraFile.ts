@@ -159,7 +159,9 @@ export default class OrchestraFile {
                 if (message.name === name && message.scenario === scenario) {
                     messageElement = node;
                     const structureElement = messageElement.getElementsByTagName("fixr:structure")[0];
-                    this.addDomMembers(structureElement, message);
+                    // assume that last element of an existing message is the trailer; insert new elements before it
+                    let insertionPoint: Element | null = structureElement.lastElementChild
+                    this.addDomMembers(structureElement, message, insertionPoint);
                     break;
                 }
             }
@@ -172,7 +174,7 @@ export default class OrchestraFile {
                 messagesElement.appendChild(messageElement);
                 const structureElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:structure");
                 messageElement.appendChild(structureElement);
-                this.addDomMembers(structureElement, message);
+                this.addDomMembers(structureElement, message, null);
                 if (message.scenario === "base" )
                     countMessagesAdded++;
                 else
@@ -189,7 +191,7 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Messages.Added",countMessagesAdded);
         this.repositoryStatistics.Add("Scenarios.Added",countScenariosAdded);
     }
-    private addDomMembers(structureElement: Element, structure: StructureModel) {
+    private addDomMembers(structureElement: Element, structure: StructureModel, insertionPoint: Node | null) {
         const fieldRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:fieldRef");
         const componentRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:componentRef");
         const groupRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:groupRef");
@@ -206,7 +208,7 @@ export default class OrchestraFile {
                         }
                     }
                     if (!found) {
-                        this.addDomFieldRef(m, structureElement);
+                        this.addDomFieldRef(m, structureElement, insertionPoint);
                         countMembersAdded++;
                     }
                 }
@@ -219,7 +221,7 @@ export default class OrchestraFile {
                         }
                     }
                     if (!found) {
-                        this.addDomComponentRef(m, structureElement);
+                        this.addDomComponentRef(m, structureElement, insertionPoint);
                         countMembersAdded++;
                     }
                 }
@@ -232,7 +234,7 @@ export default class OrchestraFile {
                         }
                     }
                     if (!found) {
-                        this.addDomGroupRef(m, structureElement);
+                        this.addDomGroupRef(m, structureElement, insertionPoint);
                         countMembersAdded++;
                     }
                 }              
@@ -241,27 +243,27 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Members.Added",countMembersAdded);
     }
 
-    private addDomGroupRef(m: GroupRef, structureElement: Element): void {
+    private addDomGroupRef(m: GroupRef, structureElement: Element, insertionPoint: Node | null): void {
         const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:groupRef");
         memberElement.setAttribute("id", m.id);
         memberElement.setAttribute("presence", m.presence.toString());
         if (m.scenario !== FieldRef.defaultScenario) {
             memberElement.setAttribute("scenario", m.scenario);
         }
-        structureElement.appendChild(memberElement);
+        structureElement.insertBefore(memberElement, insertionPoint);
     }
 
-    private addDomComponentRef(m: ComponentRef, structureElement: Element): void {
+    private addDomComponentRef(m: ComponentRef, structureElement: Element, insertionPoint: Node | null): void {
         const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:componentRef");
         memberElement.setAttribute("id", m.id);
         memberElement.setAttribute("presence", m.presence.toString());
         if (m.scenario !== FieldRef.defaultScenario) {
             memberElement.setAttribute("scenario", m.scenario);
         }
-        structureElement.appendChild(memberElement);
+        structureElement.insertBefore(memberElement, insertionPoint);
     }
 
-    private addDomFieldRef(m: FieldRef, structureElement: Element): void {
+    private addDomFieldRef(m: FieldRef, structureElement: Element, insertionPoint: Node | null): void {
         const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:fieldRef");
         memberElement.setAttribute("id", m.id);
         memberElement.setAttribute("presence", m.presence.toString());
@@ -271,7 +273,7 @@ export default class OrchestraFile {
         if (m.field && (m.field.scenario !== FieldRef.defaultScenario)) {
             memberElement.setAttribute("scenario", m.field.scenario);
         }
-        structureElement.appendChild(memberElement);
+        structureElement.insertBefore(memberElement, insertionPoint);
     }
 
     private updateDomMetadata(): void {
@@ -677,6 +679,7 @@ export default class OrchestraFile {
                 const scenario: string = node.getAttribute("scenario") || "base";
                 if (component.name === name && component.scenario === scenario) {
                     componentElement = node;
+                    this.addDomMembers(componentElement, component, null);
                     break;
                 }
             }
@@ -686,7 +689,7 @@ export default class OrchestraFile {
                 componentElement.setAttribute("scenario", component.scenario);
                 componentElement.setAttribute("id", component.id);
                 componentsElement.appendChild(componentElement);
-                this.addDomMembers(componentElement, component);
+                this.addDomMembers(componentElement, component, null);
                 countComponentsAdded++;
             }
             if (component.uses > 0) {
@@ -718,6 +721,7 @@ export default class OrchestraFile {
                 const scenario: string = node.getAttribute("scenario") || "base";
                 if (group.name === name && group.scenario === scenario) {
                     groupElement = node;
+                    this.addDomMembers(groupElement, group, null);
                     break;
                 }
             }
@@ -730,7 +734,7 @@ export default class OrchestraFile {
                 const numInGroupElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:numInGroup");
                 numInGroupElement.setAttribute("id", group.numInGroup);
                 groupElement.appendChild(numInGroupElement);
-                this.addDomMembers(groupElement, group);
+                this.addDomMembers(groupElement, group, null);
                 countGroupsAdded++;
             }
             if (group.uses > 0) {
