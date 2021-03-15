@@ -58,13 +58,7 @@ abstract class BaseStructureModel extends StructureModel {
                 const fieldContext: FieldContext = [member, this, undefined];
                 return fieldContext;
             }
-            else if (member instanceof ComponentRef) {
-                const fieldContext: FieldContext | undefined = member.findFieldRef(id);
-                if (fieldContext && fieldContext[0]) {
-                    return fieldContext;
-                }
-            }
-            else if (member instanceof GroupRef) {
+            else if (member instanceof ComponentRef || member instanceof GroupRef) {
                 const fieldContext: FieldContext | undefined = member.findFieldRef(id);
                 if (fieldContext && fieldContext[0]) {
                     return fieldContext;
