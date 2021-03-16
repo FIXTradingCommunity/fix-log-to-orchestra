@@ -130,13 +130,11 @@ export default class LogModel {
     messageListener = (messageInstance: MessageInstance) => {
         // skip a malformed message
         if (!messageInstance.msgType) {
-            // todo: log event
             return;
         }
         const messageModel: MessageModel | undefined = this.getMessageScenario(messageInstance);
         if (!messageModel) {
-            // user defined message type not supported (?)
-            // todo: log event
+            // must be a malformed message
             return;
         }
         let parseState: ParseState = new ParseState();
