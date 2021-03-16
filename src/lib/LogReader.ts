@@ -5,8 +5,6 @@
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import TVFileParser, { TVFieldParser, TVMessageParser } from "./TVFileParser";
 
-let count = 0;
-
 /**
  * Reads FIX message logs
  */
@@ -33,7 +31,7 @@ export default class LogReader {
         const logParser: TVFileParser = new TVFileParser();
         let fileOffset: number = 0;
         let chunkSize: number = 64 * 1024;
-        let str: string;
+
         // continue while not eof and at least one message found per chunk
         let atLeastOneMessage: boolean = true;
         while (fileOffset < this.fileSize && atLeastOneMessage) {

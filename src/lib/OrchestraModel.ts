@@ -98,10 +98,6 @@ export default class OrchestraModel {
  */
 class StructureModelMap<T extends StructureModel> extends Map<string, T> {
 
-    constructor() {
-        super();
-    }
-
     /**
      * Add an entry into this map with its natural key
      * @param sm a member to add to this map
@@ -113,10 +109,6 @@ class StructureModelMap<T extends StructureModel> extends Map<string, T> {
 }
 
 export class MessagesModel extends StructureModelMap<MessageModel>{
-
-    constructor() {
-        super();
-    }
 
     add(message: MessageModel): this {
         return super.add(message);
@@ -136,18 +128,11 @@ export class MessagesModel extends StructureModelMap<MessageModel>{
  */
 export class CodesetsModel extends Map<string, CodesetModel> {
 
-    constructor() {
-        super();
-    }
 }
 
 
 export class ComponentsModel extends StructureModelMap<ComponentModel> {
     private componentIdMap: Map<string, ComponentModel> = new Map();
-
-    constructor() {
-        super();
-    }
 
     add(component: ComponentModel): this {
         const key: string = component.id + "." + component.scenario;
@@ -164,10 +149,6 @@ export class ComponentsModel extends StructureModelMap<ComponentModel> {
 export class GroupsModel extends StructureModelMap<GroupModel> {
     private numInGroupMap: Map<string, GroupModel> = new Map();
     private groupIdMap: Map<string, GroupModel> = new Map();
-
-    constructor() {
-        super();
-    }
 
     add(group: GroupModel): this {
         this.numInGroupMap.set(group.numInGroup, group);
@@ -191,10 +172,6 @@ export class GroupsModel extends StructureModelMap<GroupModel> {
  */
 export class FieldsModel extends Map<string, FieldModel> {
     private fieldIdMap: Map<string, FieldModel> = new Map();
-
-    constructor() {
-        super();
-    }
 
     add(field: FieldModel): this {
         this.fieldIdMap.set(FieldRef.key(field.id, field.scenario), field);

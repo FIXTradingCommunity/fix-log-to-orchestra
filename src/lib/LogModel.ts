@@ -5,9 +5,10 @@
 import CodesetModel, { CodeModel } from "./CodesetModel";
 import { messageScenarioKeysType } from "./ConfigurationFile";
 import MessageInstance, { FieldInstance } from "./MessageInstance";
-import MessageModel, { FieldContext, FieldModel, FieldRef } from "./MessageModel";
+import MessageModel, { FieldContext, FieldModel, FieldRef, GroupModel } from "./MessageModel";
 import OrchestraModel from "./OrchestraModel";
 import { IsSupported, Presence, StructureMember, StructureModel } from "./StructureModel";
+import * as Collections from 'typescript-collections';
 
 /**
  * Updates an OrchestraModel from log messages
@@ -138,15 +139,24 @@ export default class LogModel {
             // todo: log event
             return;
         }
-        for (let fieldInstance of messageInstance) {
+        let parseState: ParseState = new ParseState();
+        for (let fieldInstance of messageInstance) {          
             // find this field in the existing message model or one of its nested components
             let fieldContext: FieldContext | undefined = messageModel.findFieldRef(fieldInstance.tag);
             if (!fieldContext) {
-                // Add a fieldRef not in the message reference model
-                // Todo: perhaps infer presence as always present=Required, otherwise Optional 
+                let groupState: GroupState | undefined  = parseState.advance(fieldInstance);
                 let fieldRef: FieldRef = new FieldRef(fieldInstance.tag, FieldModel.defaultScenario, Presence.Optional);
-                messageModel.addMember(fieldRef);
-                fieldContext = [fieldRef, messageModel, undefined];
+                if (groupState && groupState.instance < groupState.instances) {
+                    // if not already in the group and group intance less than numInGroup, add it to the group
+                    // todo: warn about unknown field at end of last group instance
+                    fieldContext = [fieldRef, groupState.group, undefined];
+                    groupState.group.addMember(fieldRef);
+                } else {
+                    // else add field to message root
+                    fieldContext = [fieldRef, messageModel, undefined];
+                    messageModel.addMember(fieldRef);
+                }
+                
                 fieldRef.field = this.orchestraModel.fields.getById(fieldInstance.tag, FieldModel.defaultScenario);
                 if (!fieldRef.field) {
                     // add a new field of default datatype, no codeset inference
@@ -156,6 +166,7 @@ export default class LogModel {
                 }
             }
             else {
+                parseState.advanceWithContext(fieldInstance, fieldContext);
                 let fieldRef: FieldRef = fieldContext[0];
                 if (!fieldRef.field) {
                     // set the field it is already defined for this scenario
@@ -217,5 +228,74 @@ export default class LogModel {
     }
 }
 
+class GroupState {
+    private _group: GroupModel;
+    private _instance: number = 0;
+    private _instances: number;
 
+    constructor(group: GroupModel, instances: number) {
+        this._group = group;
+        this._instances = instances;
+    }
 
+    public get group(): GroupModel {
+        return this._group;
+    }
+
+    public get instance(): number {
+        return this._instance;
+    }
+
+    public get instances(): number {
+        return this._instances;
+    }
+
+    public nextInstance(): void {
+        this._instance++;
+    }
+}
+
+class ParseState {
+    private groupStack = new Collections.Stack<GroupState>();
+
+    advanceWithContext(fieldInstance: FieldInstance, fieldContext: FieldContext): void {
+        // if in a new group not already on stack, push it on the stack
+        // if in a group already on stack, pop nested groups
+        // if first field of the group, increment group instance
+        let lastGroupState: GroupState | undefined = this.groupStack.peek();
+        if (fieldContext[1] instanceof GroupModel) {
+            let inGroup: GroupModel = fieldContext[1];
+            if (!lastGroupState || inGroup !== lastGroupState.group) { 
+                let depth: number = 0;  
+                this.groupStack.forEach((a: GroupState): boolean | void => {
+                    if (a.group !== inGroup) {
+                        depth++;
+                    } else {
+                        return false;
+                    }
+                }
+                );
+                for (let i = 0; i < depth; i++) {
+                    this.groupStack.pop();
+                }
+                if (depth === 0) {
+                    this.groupStack.push(new GroupState(inGroup, Number(fieldInstance.value)));
+                }
+            } else {
+                let first = lastGroupState.group.members[0];
+                if (first instanceof FieldRef) {
+                    if (first.id === fieldInstance.tag) {
+                        lastGroupState.nextInstance();
+                    }
+                } 
+            }
+        } else if (fieldContext[1] instanceof MessageModel) {
+            // in the message root, no active group
+            this.groupStack.clear();
+        }
+    }
+
+    advance(fieldInstance: FieldInstance): GroupState | undefined {
+        return this.groupStack.peek();
+    }
+}
