@@ -8,7 +8,6 @@ import MessageInstance, { FieldInstance } from "./MessageInstance";
 import MessageModel, { FieldContext, FieldModel, FieldRef, GroupModel } from "./MessageModel";
 import OrchestraModel from "./OrchestraModel";
 import { IsSupported, Presence, StructureMember, StructureModel } from "./StructureModel";
-import * as Collections from 'typescript-collections';
 
 /**
  * Updates an OrchestraModel from log messages
@@ -144,7 +143,7 @@ export default class LogModel {
             if (!fieldContext) {
                 let groupState: GroupState | undefined  = parseState.advance(fieldInstance);
                 let fieldRef: FieldRef = new FieldRef(fieldInstance.tag, FieldModel.defaultScenario, Presence.Optional);
-                if (groupState && groupState.instance < groupState.instances) {
+                if (groupState && groupState.instance <= groupState.instances) {
                     // if not already in the group and group intance less than numInGroup, add it to the group
                     // todo: warn about unknown field at end of last group instance
                     fieldContext = [fieldRef, groupState.group, undefined];
@@ -240,60 +239,55 @@ class GroupState {
         return this._group;
     }
 
+    // 1-based index of repeating group instance
     public get instance(): number {
         return this._instance;
     }
 
+    // value of NumInGroup
     public get instances(): number {
         return this._instances;
     }
 
+    // not incremented until first field of an instance is found, so index is 1-based
     public nextInstance(): void {
         this._instance++;
     }
 }
 
 class ParseState {
-    private groupStack = new Collections.Stack<GroupState>();
+    private groupStack = new Array<GroupState>();
 
     advanceWithContext(fieldInstance: FieldInstance, fieldContext: FieldContext): void {
         // if in a new group not already on stack, push it on the stack
         // if in a group already on stack, pop nested groups
         // if first field of the group, increment group instance
-        let lastGroupState: GroupState | undefined = this.groupStack.peek();
         if (fieldContext[1] instanceof GroupModel) {
             let inGroup: GroupModel = fieldContext[1];
-            if (!lastGroupState || inGroup !== lastGroupState.group) { 
-                let depth: number = 0;  
-                this.groupStack.forEach((a: GroupState): boolean | void => {
-                    if (a.group !== inGroup) {
-                        depth++;
-                    } else {
-                        return false;
-                    }
-                }
-                );
-                for (let i = 0; i < depth; i++) {
-                    this.groupStack.pop();
-                }
-                if (depth === 0) {
-                    this.groupStack.push(new GroupState(inGroup, Number(fieldInstance.value)));
-                }
-            } else {
-                let first = lastGroupState.group.members[0];
+            let thisGroupIndex = this.groupStack.findIndex(gs => gs.group === inGroup);
+
+            if (thisGroupIndex === -1) {
+                // add nested group
+                this.groupStack.push(new GroupState(inGroup, Number(fieldInstance.value)));
+            } else if (thisGroupIndex === this.groupStack.length - 1) {
+                // in same group, check instance
+                let first = inGroup.members[0];
                 if (first instanceof FieldRef) {
                     if (first.id === fieldInstance.tag) {
-                        lastGroupState.nextInstance();
+                        this.groupStack[thisGroupIndex].nextInstance();
                     }
                 } 
-            }
+            } else {
+                // pop nested groups by setting length to only include this group
+                this.groupStack.length = thisGroupIndex + 1;
+            } 
         } else if (fieldContext[1] instanceof MessageModel) {
-            // in the message root, no active group
-            this.groupStack.clear();
+            // in the message root, no active group, clear all
+            this.groupStack.length = 0;
         }
     }
 
     advance(fieldInstance: FieldInstance): GroupState | undefined {
-        return this.groupStack.peek();
+        return this.groupStack[this.groupStack.length - 1];
     }
 }
