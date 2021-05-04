@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.8.3",
-    "@sentry/browser": "^5.13.2",
+    "@sentry/browser": "^6.3.5",
     "@types/jest": "23.3.10",
     "@types/jsonwebtoken": "^8.3.2",
     "@types/material-ui": "^0.21.7",
@@ -23,7 +23,7 @@
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.17.0",
     "tslint-react": "^3.6.0",
-    "typescript": "3.2.2",
+    "typescript": "^3.5.3",
     "vkbeautify": "^0.99.3"
   },
   "scripts": {

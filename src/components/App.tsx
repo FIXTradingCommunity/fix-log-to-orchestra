@@ -448,7 +448,6 @@ export default class App extends Component {
       return;
     }
 
-
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
     try {
