@@ -15,7 +15,7 @@ export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
     static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra/repository";
 
-    private repositoryStatistics = new KeyedCollection<Number>();
+    private repositoryStatistics = new KeyedCollection<number>();
 
     private file: File;
     private document: Document = new Document();
@@ -29,11 +29,11 @@ export default class OrchestraFile {
         this.progressFunc = progressFunc;
         this.appendOnly = appendOnly;
     }
-    static parse(xml: string): Document | Error {
+    static parse(xmlString: string): Document | Error {
         const parser = new DOMParser();
         // test namespace of parseerror since it's different between browsers
         let parsererrorNS: string | null = parser.parseFromString('INVALID', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
-        let doc: Document = parser.parseFromString(xml, OrchestraFile.MIME_TYPE);
+        let doc: Document = parser.parseFromString(xmlString, OrchestraFile.MIME_TYPE);
         if (parsererrorNS && doc.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0) {
             const errors = doc.getElementsByTagNameNS(parsererrorNS, 'parsererror');
             return new Error(OrchestraFile.getErrorMessage(errors[0].textContent));
@@ -76,7 +76,7 @@ export default class OrchestraFile {
     get size(): number {
         return this.file.size;
     }
-    get statistics(): KeyedCollection<Number> {
+    get statistics(): KeyedCollection<number> {
         return this.repositoryStatistics;
     }
     readFile(): Promise<void> {
@@ -339,14 +339,14 @@ export default class OrchestraFile {
                 codesetsModel.set(codeset.key(), codeset);
                 let childElement: Element | null = codesetElement.firstElementChild;
                 while (childElement) {
-                    const elementName: string = childElement.localName;
-                    if (elementName === "code") {
-                        const id: string | null = childElement.getAttribute("id");
-                        const name: string | null = childElement.getAttribute("name");
+                    const elementLocalName: string = childElement.localName;
+                    if (elementLocalName === "code") {
+                        const elementId: string | null = childElement.getAttribute("id");
+                        const elementName: string | null = childElement.getAttribute("name");
                         const value: string | null = childElement.getAttribute("value");
                         supported = childElement.getAttribute("supported") || "supported";
-                        if (name && value) {
-                            const code: CodeModel = new CodeModel(id, name, value, IsSupportedfromString(supported));
+                        if (elementName && value) {
+                            const code: CodeModel = new CodeModel(elementId, elementName, value, IsSupportedfromString(supported));
                             codeset.add(code);
                         }
                     }
@@ -383,8 +383,8 @@ export default class OrchestraFile {
         const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
         let groupElement: Element = iterator.iterateNext() as Element;
         while (groupElement) {
-            const elementName: string = groupElement.localName;
-            if (elementName === "group") {
+            const elementLocalName: string = groupElement.localName;
+            if (elementLocalName === "group") {
                 const id: string | null = groupElement.getAttribute("id");
                 const name: string | null = groupElement.getAttribute("name");
                 const scenario: string = groupElement.getAttribute("scenario") || "base";
@@ -558,51 +558,57 @@ export default class OrchestraFile {
                 codesetElement.setAttribute("type", codeset.type);
                 codesetsElement.appendChild(codesetElement);
             }
-            if (usedCodes.length) {
-                codesetElement.setAttribute("supported", "supported");
-            }
-            else if (!this.appendOnly) {
-                codesetsElement.removeChild(codesetElement);
-            }
-            const codeElements: HTMLCollectionOf<Element> = codesetElement.getElementsByTagName("fixr:code");
-            let domCodeValues: string[] = [];
-            for (let i: number = 0; i < codeElements.length; i++) {
-                const value: string | null = codeElements[i].getAttribute("value");
-                if (value) {
-                    domCodeValues.push(value);
-                }
-            }
             if (usedCodes.length > 0) {
+                codesetElement.setAttribute("supported", "supported");
+                const codeElements: HTMLCollectionOf<Element> = codesetElement.getElementsByTagName("fixr:code");
+                let domCodeValues: string[] = [];
                 for (let i: number = 0; i < codeElements.length; i++) {
-                    const value: string | null = codeElements[i].getAttribute("value");
-                    if (value) {
-                        const code: CodeModel | undefined = codeset.getByValue(value);
+                    const domCodeValue: string | null = codeElements[i].getAttribute("value");
+                    if (domCodeValue) {
+                        domCodeValues.push(domCodeValue);
+                    }
+                }
+                
+                const elementsToRemove = new Array<Element>();
+                for (let i: number = 0; i < codeElements.length; i++) {
+                    const codeElementValue: string | null = codeElements[i].getAttribute("value");
+                    if (codeElementValue) {
+                        const code: CodeModel | undefined = codeset.getByValue(codeElementValue);
                         if (code && code.uses > 0) {
                             codeElements[i].setAttribute("supported", "supported");
                             countCodesUsed++;
                         }
                         else if (!this.appendOnly) {
-                            codesetElement.removeChild(codeElements[i]);
+                            elementsToRemove.push(codeElements[i]);
                             countCodesRemoved++;
                         }
                     }
                 }
-            }
-            const notFoundInDom: Array<string> = usedCodeValues.filter(x => domCodeValues.indexOf(x) < 0);
-            notFoundInDom.forEach((value: string) => {
-                const code: CodeModel | undefined = codeset.getByValue(value);
-                if (code) {
-                    const codeElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:code");
-                    codeElement.setAttribute("name", code.name);
-                    codeElement.setAttribute("id", code.id);
-                    codeElement.setAttribute("value", code.value);
-                    codeElement.setAttribute("supported", "supported");
-                    if (codesetElement) {
-                        codesetElement.appendChild(codeElement);
-                        countCustomCodes++;
+                for (let element of elementsToRemove) {
+                    const parent = element.parentElement;
+                    if (parent) {
+                        parent.removeChild(element);
                     }
                 }
-            });
+
+                const notFoundInDom: Array<string> = usedCodeValues.filter(x => domCodeValues.indexOf(x) < 0);
+                notFoundInDom.forEach((newValue: string) => {
+                    const newCode: CodeModel | undefined = codeset.getByValue(newValue);
+                    if (newCode) {
+                        const codeElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:code");
+                        codeElement.setAttribute("name", newCode.name);
+                        codeElement.setAttribute("id", newCode.id);
+                        codeElement.setAttribute("value", newCode.value);
+                        codeElement.setAttribute("supported", "supported");
+                        if (codesetElement) {
+                            codesetElement.appendChild(codeElement);
+                            countCustomCodes++;
+                        }
+                    }
+                });
+            } else if (!this.appendOnly) {
+                codesetsElement.removeChild(codesetElement);
+            }
         });
         this.repositoryStatistics.Add("Codes.Used",countCodesUsed);
         this.repositoryStatistics.Add("Codes.Removed",countCodesRemoved);

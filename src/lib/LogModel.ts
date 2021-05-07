@@ -142,24 +142,24 @@ export default class LogModel {
             let fieldContext: FieldContext | undefined = messageModel.findFieldRef(fieldInstance.tag);
             if (!fieldContext) {
                 let groupState: GroupState | undefined  = parseState.advance(fieldInstance);
-                let fieldRef: FieldRef = new FieldRef(fieldInstance.tag, FieldModel.defaultScenario, Presence.Optional);
+                let newFieldRef: FieldRef = new FieldRef(fieldInstance.tag, FieldModel.defaultScenario, Presence.Optional);
                 if (groupState && groupState.instance <= groupState.instances) {
                     // if not already in the group and group intance less than numInGroup, add it to the group
                     // todo: warn about unknown field at end of last group instance
-                    fieldContext = [fieldRef, groupState.group, undefined];
-                    groupState.group.addMember(fieldRef);
+                    fieldContext = [newFieldRef, groupState.group, undefined];
+                    groupState.group.addMember(newFieldRef);
                 } else {
                     // else add field to message root
-                    fieldContext = [fieldRef, messageModel, undefined];
-                    messageModel.addMember(fieldRef);
+                    fieldContext = [newFieldRef, messageModel, undefined];
+                    messageModel.addMember(newFieldRef);
                 }
                 
-                fieldRef.field = this.orchestraModel.fields.getById(fieldInstance.tag, FieldModel.defaultScenario);
-                if (!fieldRef.field) {
+                newFieldRef.field = this.orchestraModel.fields.getById(fieldInstance.tag, FieldModel.defaultScenario);
+                if (!newFieldRef.field) {
                     // add a new field of default datatype, no codeset inference
                     // field name must begin with alpha character
-                    fieldRef.field = new FieldModel(fieldRef.id, "Field" + fieldRef.id.toString(), FieldModel.defaultDatatype, FieldModel.defaultScenario);
-                    this.orchestraModel.fields.add(fieldRef.field);
+                    newFieldRef.field = new FieldModel(newFieldRef.id, "Field" + newFieldRef.id.toString(), FieldModel.defaultDatatype, FieldModel.defaultScenario);
+                    this.orchestraModel.fields.add(newFieldRef.field);
                 }
             }
             else {
@@ -168,10 +168,18 @@ export default class LogModel {
                 if (!fieldRef.field) {
                     // set the field it is already defined for this scenario
                     fieldRef.field = this.model.fields.getById(fieldInstance.tag, messageModel.scenario);
-                    if (!fieldRef.field) {
+                    if (fieldRef.field) {
+                        // also set the codeset if it already exists for this scenario
+                        let codesetKey: string = CodesetModel.key(fieldRef.field.datatype, messageModel.scenario);
+                        fieldRef.codeset = this.model.codesets.get(codesetKey);
+                    }
+                    else if (messageModel.scenario !== FieldModel.defaultScenario) {
                         // only create a field with this scenario if it has a codeset; otherwise use base scenario.
                         const defaultField: FieldModel | undefined = this.model.fields.getById(fieldInstance.tag, FieldModel.defaultScenario);
                         if (defaultField) {
+                            // clone the field for this scenario
+                            fieldRef.field = defaultField.clone(messageModel.scenario);
+                            this.orchestraModel.fields.add(fieldRef.field);
                             let codesetKey: string = CodesetModel.key(defaultField.datatype, FieldModel.defaultScenario);
                             const defaultCodeset: CodesetModel | undefined = this.model.codesets.get(codesetKey);
                             if (defaultCodeset) {
@@ -182,12 +190,7 @@ export default class LogModel {
                                     fieldRef.codeset = defaultCodeset.clone(messageModel.scenario);
                                     this.model.codesets.set(codesetKey, fieldRef.codeset);
                                 }
-                                // clone the field for this scenario
-                                fieldRef.field = defaultField.clone(messageModel.scenario);
-                                this.orchestraModel.fields.add(fieldRef.field);
-                            }
-                            else {
-                                fieldRef.field = defaultField;
+
                             }
                         }
                     }
