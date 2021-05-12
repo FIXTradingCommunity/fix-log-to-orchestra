@@ -390,11 +390,10 @@ export default class App extends Component {
         if (this.outputProgress instanceof ProgressBar) {
           this.outputProgress.setProgress(0);
         }
-        
       } catch (error) {
         if (error) {
           Sentry.captureException(error);
-          this.alertMsg = error;
+          this.alertMsg = error.message || error;
         }
         this.setState({ showAlerts: true, creatingFile: false });
       }

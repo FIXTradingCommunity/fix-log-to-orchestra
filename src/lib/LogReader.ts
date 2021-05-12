@@ -78,6 +78,11 @@ export default class LogReader {
                 if (this.progressNode) {
                     this.progressFunc(this.progressNode, -1);
                 }
+                if (this.reader.error && this.reader.error.toString) {
+                  const newError = new Error(this.reader.error.toString());
+                  newError.name = 'Message Log File Error';
+                  reject(newError);
+                }
                 reject(this.reader.error);
             };
             const blob = this.logFile.slice(offset, offset + bytes);

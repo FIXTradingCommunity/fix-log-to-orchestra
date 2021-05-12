@@ -48,6 +48,11 @@ export default class ConfigurationFile {
                     this.progressFunc(this.progressNode, -1);
                 }
                 reader.abort();
+                if (reader.error && reader.error.toString) {
+                  const newError = new Error(reader.error.toString());
+                  newError.name = 'Configuration File Error';
+                  reject(newError);
+                }
                 reject(reader.error);
             };
             reader.onprogress = (event: ProgressEvent) => {
