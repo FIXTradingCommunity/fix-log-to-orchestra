@@ -4,6 +4,7 @@
 
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import TVFileParser, { TVFieldParser, TVMessageParser } from "./TVFileParser";
+import { File } from './enums';
 
 /**
  * Reads FIX message logs
@@ -80,7 +81,7 @@ export default class LogReader {
                 }
                 if (this.reader.error && this.reader.error.toString) {
                   const newError = new Error(this.reader.error.toString());
-                  newError.name = 'Message Log File Error';
+                  newError.name = File.MessageLog;
                   reject(newError);
                 }
                 reject(this.reader.error);

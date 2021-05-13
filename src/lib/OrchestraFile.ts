@@ -10,6 +10,7 @@ import { IsSupportedfromString, Presence, PresencefromString, StructureModel } f
 import { KeyedCollection } from "./KeyedCollection";
 //import { ActionViewArray } from "material-ui/svg-icons";
 import {xml} from "vkbeautify";
+import { File } from './enums';
 
 export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
@@ -115,7 +116,7 @@ export default class OrchestraFile {
                 reader.abort();
                 if (reader.error && reader.error.toString) {
                   const newError = new Error(reader.error.toString());
-                  newError.name = 'Orchestra File Error';
+                  newError.name = File.Orchestra;
                   reject(newError);
                 }
                 reject(reader.error);
