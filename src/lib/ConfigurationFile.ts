@@ -2,7 +2,8 @@
  * Copyright 2019, FIX Protocol Ltd.
  */
 
- import defaultMessageScenarioKeys from "./defaultMessageScenarioKeys.json";
+import defaultMessageScenarioKeys from "./defaultMessageScenarioKeys.json";
+import { File } from './enums';
 
 export type messageScenarioKeysType = { "keys": { "msgType": string; "fieldIds": string[]; }[]; };
 
@@ -48,6 +49,11 @@ export default class ConfigurationFile {
                     this.progressFunc(this.progressNode, -1);
                 }
                 reader.abort();
+                if (reader.error && reader.error.toString) {
+                  const newError = new Error(reader.error.toString());
+                  newError.name = File.Configuration;
+                  reject(newError);
+                }
                 reject(reader.error);
             };
             reader.onprogress = (event: ProgressEvent) => {

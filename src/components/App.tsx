@@ -18,6 +18,7 @@ import './app.css';
 import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import ResultsPage from './ResultsPage/ResultsPage';
+import { File } from '../lib/enums';
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
@@ -52,6 +53,11 @@ interface IDecoded {
   exp?: number;
 }
 
+interface ErrorMsg {
+  title: string,
+  message: string
+}
+
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
 
@@ -77,7 +83,7 @@ export default class App extends Component {
   private outputProgress: HTMLElement | undefined = undefined;
   private logProgress: HTMLElement | undefined = undefined;
   private configurationProgress: HTMLElement | undefined = undefined;
-  private alertMsg: string = "";
+  private alertMsg: ErrorMsg = { title: "", message: "" };
 
   constructor(props: {}) {
     super(props)
@@ -110,7 +116,14 @@ export default class App extends Component {
                   onChange={this.inputOrchestra}
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
-                  clearError={() => { this.setState({ referenceFileError: "", showAlerts: "" })}}
+                  clearError={() => {
+                    if (this.alertMsg.title.includes(File.Orchestra) || this.alertMsg.title.includes(File.Orchestra.toLowerCase())) {
+                      this.setState({ referenceFileError: "", showAlerts: "" })
+                    }
+                    else {
+                      this.setState({ referenceFileError: "" })
+                    }
+                  }}
                 />
               </div>
               <div className="field">
@@ -120,7 +133,14 @@ export default class App extends Component {
                   ref={this.setLogFileBarRef as () => {}}
                   multiple={true}
                   error={this.state.logFilesError}
-                  clearError={() => { this.setState({ logFilesError: "" })}}
+                  clearError={() => {
+                    if (this.alertMsg.title.includes(File.MessageLog)) {
+                      this.setState({ logFilesError: "", showAlerts: "" })
+                    }
+                    else {
+                      this.setState({ logFilesError: "" })
+                    }
+                  }}
                 />
               </div>
               <div className="field">
@@ -129,14 +149,19 @@ export default class App extends Component {
                   accept=".json"
                   onChange={this.inputConfiguration}
                   ref={this.setConfigurationFileBarRef as () => {}}
+                  clearError={() => {
+                    if (this.alertMsg.title.includes(File.Configuration)) {
+                      this.setState({ showAlerts: "" })
+                    }
+                  }}
                 />
               </div>
             </div>
             {
               this.state.showAlerts && 
               <div className="errorContainer">
-                <h4>{`Your input orchestra file ${this.referenceFile && `named '${this.referenceFile.name}'`} is invalid or empty`}</h4>
-                <textarea readOnly={true} className="errorMessage" value={this.alertMsg}></textarea>
+                <h4>{this.alertMsg.title}</h4>
+                <textarea readOnly={true} className="errorMessage" value={this.alertMsg.message}></textarea>
               </div>
             }
             <h2>Output</h2>
@@ -390,11 +415,14 @@ export default class App extends Component {
         if (this.outputProgress instanceof ProgressBar) {
           this.outputProgress.setProgress(0);
         }
-        
       } catch (error) {
         if (error) {
           Sentry.captureException(error);
-          this.alertMsg = error;
+          
+          this.alertMsg = {
+            title: this.getErrorName(error.name),
+            message: error.message || error
+          };
         }
         this.setState({ showAlerts: true, creatingFile: false });
       }
@@ -410,6 +438,17 @@ export default class App extends Component {
         orchestraFileNameError: !this.orchestraFileName && "Orchestra file name not entered",
         referenceFileError: !this.referenceFile && "FIX log file not selected",
       });
+    }
+  }
+
+  private getErrorName(error: string): string {
+    switch (error) {
+      case File.Orchestra:
+      case File.Configuration:
+      case File.MessageLog:
+        return `There was an error reading your input ${error}, please reupload it`;
+      default:
+        return `Your input orchestra file ${this.referenceFile && `named '${this.referenceFile.name}'`} is invalid or empty`;
     }
   }
 
