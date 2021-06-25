@@ -117,7 +117,7 @@ export default class App extends Component {
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
                   clearError={() => {
-                    if (this.alertMsg.title.includes(File.Orchestra) || this.alertMsg.title.includes(File.Orchestra.toLowerCase())) {
+                    if (this.alertMsg.title.includes(File.Orchestra) || this.alertMsg.title.includes(File.Orchestra)) {
                       this.setState({ referenceFileError: "", showAlerts: "" })
                     }
                     else {
@@ -420,8 +420,8 @@ export default class App extends Component {
           Sentry.captureException(error);
           
           this.alertMsg = {
-            title: this.getErrorName(error.name),
-            message: error.message || error
+            title: this.getErrorTitle(error.name),
+            message: this.setMessageError(error.message || error)
           };
         }
         this.setState({ showAlerts: true, creatingFile: false });
@@ -441,15 +441,23 @@ export default class App extends Component {
     }
   }
 
-  private getErrorName(error: string): string {
+  private getErrorTitle(error: string): string {
     switch (error) {
       case File.Orchestra:
       case File.Configuration:
       case File.MessageLog:
-        return `There was an error reading your input ${error}, please reupload it`;
+        return `There was an error reading your ${error}, please upload it again`;
       default:
         return `Your input orchestra file ${this.referenceFile && `named '${this.referenceFile.name}'`} is invalid or empty`;
     }
+  }
+
+  private setMessageError(errorMsg: string): string {
+    const NotReadableErrorRes =
+      'The requested file could not be read, possibly due to a permission problem or because the file was changed';
+    return (
+      errorMsg.startsWith('NotReadableError') ? `NotReadableError: ${NotReadableErrorRes}` : errorMsg
+    );
   }
 
   private createLink(contents: Blob): void {
