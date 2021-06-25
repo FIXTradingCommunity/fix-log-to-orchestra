@@ -1,5 +1,5 @@
 export const File = {
-  Orchestra: 'Orchestra File',
-  Configuration: 'Configuration File',
-  MessageLog: 'Message Log File'
+  Orchestra: 'orchestra file',
+  Configuration: 'configuration file',
+  MessageLog: 'message log file'
 }
