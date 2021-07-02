@@ -293,6 +293,8 @@ footer p {
 }
 
 .clearFieldsButton {
+    width: 210px;
+    margin: 0px;
     background: none;
     border: none;
     border-color: white;

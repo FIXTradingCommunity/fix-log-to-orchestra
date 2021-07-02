@@ -45,7 +45,7 @@ class FileInput extends Component<Props> {
                 <div className={`inputBox ${isDragActive ? "dragActive" : ""} ${(!isValidFileType && isDragActive) || error  ? "inputBoxError" : ""}`}>
                   {
                     isDragActive ?
-                      <>
+                    <>
                         <ProgressCircle value={pct} />
                         <div>
                           {
@@ -55,8 +55,8 @@ class FileInput extends Component<Props> {
                           }
                         </div>
                       </>
-                      :
-                      <>
+                    :
+                    <>
                         <ProgressCircle value={pct} />
                         <div className="inputContent">
                           <p className="inputText">Drag file to upload or</p>
@@ -126,12 +126,12 @@ class FileInput extends Component<Props> {
   public clear = () => {
     this.setState({
       fileName: "",
+      pct: 0
     })
   }
 
   private onDrop = (acceptedFiles: FileList) => {
-    
-    this.handleChange(acceptedFiles)
+    this.handleChange(acceptedFiles);
   };
 }
 
