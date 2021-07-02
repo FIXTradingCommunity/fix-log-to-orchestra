@@ -25,7 +25,7 @@ class ProgressCircle extends Component<Props> {
     const pct = ((100-value)/100) * c;
 
     return (
-      <div className="progressCircleContainer" data-pct={value ? pctString : ""}>
+      <div className="progressCircleContainer" data-pct={value ? (value === 100 ? pctString : 'Reading') : ""}>
         { !value && <img src={upArrow} className="upArrow" /> }
         <svg className="circleSvg" width="60" height="60" version="1.1" xmlns="http://www.w3.org/2000/svg">
           <circle
