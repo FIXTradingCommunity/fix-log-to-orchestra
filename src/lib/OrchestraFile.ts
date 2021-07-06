@@ -286,6 +286,12 @@ export default class OrchestraFile {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:metadata", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const metadataElement: Element = nodesSnapshot.snapshotItem(0) as Element;
+        const elementsToRemove: Array<Element> = [
+            metadataElement.getElementsByTagName('dc:creator')[0],
+            metadataElement.getElementsByTagName('dc:source')[0],
+            metadataElement.getElementsByTagName('dc:rights')[0]
+        ];
+        if (elementsToRemove) elementsToRemove.map(element => element && metadataElement.removeChild(element));
         const contributorElement: Element = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:contributor");
         const textNode: Text = this.dom.createTextNode("log2orchestra");
         contributorElement.appendChild(textNode);
