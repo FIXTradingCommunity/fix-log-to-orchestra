@@ -199,32 +199,20 @@ export default class App extends Component {
               <label>Append only (removes no scenarios)</label><br />
             </div>
             <div className="buttonsContainer">
-              {
-                !this.state.downloadHref
-                  ? <button
-                      type="button"
-                      className="submitButton"
-                      onClick={() => this.createOrchestra()}
-                      disabled={
-                        this.state.showAlerts ||
-                        Boolean(this.state.logFilesError) ||
-                        Boolean(this.state.orchestraFileNameError) ||
-                        Boolean(this.state.referenceFileError)}
-                    >
-                      {
-                        this.state.creatingFile ? "Loading..." : "Create Orchestra file"
-                      }
-                    </button>
-                  : <a
-                      className="submitButton downloadButton"
-                      href={this.state.downloadHref}
-                      download={this.orchestraFileName}
-                      data-downloadurl={this.state.downloadUrl}
-                      onClick={this.handleDownloadClick.bind(this)}
-                    >
-                      { this.state.downloaded ? "Downloaded" : "Download File"}
-                    </a>
-              }
+              <button
+                type="button"
+                className="submitButton"
+                onClick={() => this.createOrchestra()}
+                disabled={
+                  this.state.showAlerts ||
+                  Boolean(this.state.logFilesError) ||
+                  Boolean(this.state.orchestraFileNameError) ||
+                  Boolean(this.state.referenceFileError)}
+              >
+                {
+                  this.state.creatingFile ? "Loading..." : "Create Orchestra file"
+                }
+              </button>
               { (this.state.results && this.state.downloadHref) && <button className="clearFieldsButton showResultsButton" onClick={this.openResults}>Show Results</button> }
               <div className="redirectButtonContainers">
                 <a
@@ -401,6 +389,11 @@ export default class App extends Component {
     });
   }
   private async createOrchestra(): Promise<void> {
+    this.setState({
+      results: undefined,
+      showResults: false,
+    });
+
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
       this.setState({ showAlerts: false, showHelp: false, creatingFile: true });

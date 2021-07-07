@@ -50,7 +50,7 @@ class FileInput extends Component<Props> {
                         <div>
                           {
                             isValidFileType ?
-                            <p className="inputText">Drop your Reference Orchestra file here</p> :
+                            <p className="inputText">{`Drop your ${label} here`}</p> :
                             <p className="inputText inputTextError">{fileType || "This file type" } is not allowed</p>
                           }
                         </div>
@@ -59,7 +59,7 @@ class FileInput extends Component<Props> {
                       <>
                         <ProgressCircle value={pct} />
                         <div className="inputContent">
-                          <p className="inputText">Drag file to upload or</p>
+                          <p className="inputText">Drag file to read or</p>
                           <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}
@@ -126,12 +126,12 @@ class FileInput extends Component<Props> {
   public clear = () => {
     this.setState({
       fileName: "",
+      pct: 0
     })
   }
 
   private onDrop = (acceptedFiles: FileList) => {
-    
-    this.handleChange(acceptedFiles)
+    this.handleChange(acceptedFiles);
   };
 }
 
