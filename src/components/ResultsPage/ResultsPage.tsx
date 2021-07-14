@@ -53,7 +53,7 @@ const ProgressCircle: React.FC<Props> = (props) => {
           <div className="resultsValue">{messageScenarios}</div>
         </div>
         <div className="resultsValueContainer">
-          <div className="resultsLabel"># fields discovered</div>
+          <div className="resultsLabel"># standard fields discovered</div>
           <div className="resultsValue">{fields}</div>
         </div>
         <div className="resultsValueContainer">

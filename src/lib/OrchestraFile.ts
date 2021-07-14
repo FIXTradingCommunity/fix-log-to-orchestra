@@ -665,9 +665,11 @@ export default class OrchestraFile {
             }
             if (field.uses > 0) {
                 fieldElement.setAttribute("supported", "supported");
-                countFieldsUsed++;
                 if (this.isUserDefined(field)) {
                     countFieldsUserDefined++;
+                }
+                else {
+                    countFieldsUsed++;
                 }
             }
             else if (!this.appendOnly) {
