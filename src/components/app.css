@@ -140,6 +140,7 @@ a {
 }
 
 footer {
+    margin-top: 20px;
     padding-bottom: 40px;
 }
 
@@ -271,11 +272,6 @@ footer p {
     outline: none;
     overflow: hidden;
     color: red;
-}
-
-#output {
-    padding-top: 20px;
-    padding-bottom: 20px;
 }
 
 .fileReadyButton {

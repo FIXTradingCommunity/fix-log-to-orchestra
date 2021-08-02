@@ -12,7 +12,6 @@ import { version } from '../../package.json';
 import logo from '../assets/FIXorchestraLogo.png';
 import Log2Orchestra from "../lib/log2orchestra";
 import OrchestraFile from "../lib/OrchestraFile";
-import OrchestraModel from '../lib/OrchestraModel';
 import Utility from '../lib/utility';
 import './app.css';
 import FileInput from './FileInput/FileInput';
@@ -214,7 +213,6 @@ export default class App extends Component {
                   this.state.creatingFile ? "Loading..." : "Create Orchestra file"
                 }
               </button>
-              { (this.state.results && this.state.downloadHref) && <button className="showResultsButton" onClick={this.openResults}>Show Results</button> }
               <div className="redirectButtonContainers">
                 <a
                   className="redirectButton"
@@ -234,8 +232,11 @@ export default class App extends Component {
                 </a>
               </div>
             </div>
+            {
+              this.state.results && this.state.downloadHref &&
+                <button className="showResultsButton" onClick={this.openResults}>Show Results</button>
+            }
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
-            <output id="output"></output>
           </div>
         </div>
         <footer className="container">
@@ -292,7 +293,14 @@ export default class App extends Component {
       this.configurationProgress.clear()
     }
 
-    this.setState({ showAlerts: false });
+    this.setState({
+      downloadHref: "",
+      downloadUrl: "",
+      results: undefined,
+      showResults: false,
+      showAlerts: false
+    });
+
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {
@@ -395,7 +403,7 @@ export default class App extends Component {
 
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
-      this.setState({ showAlerts: false, showHelp: false, creatingFile: true });
+      this.setState({ showAlerts: false, creatingFile: true });
       const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
         this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
       try {
@@ -459,7 +467,6 @@ export default class App extends Component {
       this.setState({
         downloadHref: url,
         downloadUrl: [OrchestraFile.MIME_TYPE, this.orchestraFileName, url].join(':'),
-        loading: true,
       });
     }
   }
@@ -473,7 +480,6 @@ export default class App extends Component {
         downloadHref: "",
         downloadUrl: "",
         downloaded: false,
-        loading: false,
       });
     }, 1500);
   }
