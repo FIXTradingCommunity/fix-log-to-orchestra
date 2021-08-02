@@ -157,6 +157,7 @@ export default class App extends Component {
                 />
               </div>
             </div>
+            <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>Clear Input Files</button>
             {
               this.state.showAlerts && 
               <div className="errorContainer">
@@ -213,7 +214,7 @@ export default class App extends Component {
                   this.state.creatingFile ? "Loading..." : "Create Orchestra file"
                 }
               </button>
-              { (this.state.results && this.state.downloadHref) && <button className="clearFieldsButton showResultsButton" onClick={this.openResults}>Show Results</button> }
+              { (this.state.results && this.state.downloadHref) && <button className="showResultsButton" onClick={this.openResults}>Show Results</button> }
               <div className="redirectButtonContainers">
                 <a
                   className="redirectButton"
@@ -234,7 +235,6 @@ export default class App extends Component {
               </div>
             </div>
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
-            <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>Clear Fields</button>
             <output id="output"></output>
           </div>
         </div>
@@ -281,9 +281,7 @@ export default class App extends Component {
     if (this.configurationFile) {
       this.configurationFile = undefined;
     }
-    if (this.orchestraFileName) {
-      this.orchestraFileName = "";
-    }
+
     if (this.inputProgress instanceof FileInput) {
       this.inputProgress.clear()
     }
@@ -293,6 +291,7 @@ export default class App extends Component {
     if (this.configurationProgress instanceof FileInput) {
       this.configurationProgress.clear()
     }
+
     this.setState({ showAlerts: false });
   }
 
