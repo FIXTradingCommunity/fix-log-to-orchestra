@@ -140,6 +140,7 @@ a {
 }
 
 footer {
+    margin-top: 20px;
     padding-bottom: 40px;
 }
 
@@ -151,10 +152,8 @@ footer p {
 
 .field {
     border: none;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin: 10px;
     width: 200px;
-    margin-right: 20px;
 }
 
 .inputsContainer {
@@ -275,11 +274,6 @@ footer p {
     color: red;
 }
 
-#output {
-    padding-top: 20px;
-    padding-bottom: 20px;
-}
-
 .fileReadyButton {
     padding: 10px 20px;
     border: 1px solid #009FE3;
@@ -293,19 +287,30 @@ footer p {
 }
 
 .clearFieldsButton {
-    width: 210px;
-    margin: 0px;
     background: none;
-    border: none;
-    border-color: white;
-    padding: 10px;
-    color: #9D9D9D;
+    align-self: center;
+    height: 36px;
+    width: 150px;
+    margin-bottom: 10px;
+    margin-top: 15px;
+    border: 2px solid #c7c7c7;
+    border-radius: 23px;
+    color: #009FE3;
+    font-weight: 500;
     font-size: 14px;
+    text-align: center;
+    cursor: pointer;
 }
 
 .showResultsButton {
-    margin-left: 20px;
+    width: 210px;
+    margin: 0px;
+    padding: 10px;
     color: #009FE3;
+    background: none;
+    border: none;
+    border-color: white;
+    font-size: 14px;
 }
 
 .submitButton.closeResultsButton {
