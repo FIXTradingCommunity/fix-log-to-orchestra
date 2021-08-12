@@ -370,12 +370,14 @@ export default class App extends Component {
 
     const components = output.statistics.Item("Components.Used");
 
-    const componentScenarios = 0;  // Needs to be implemented
+    const codesets = output.statistics.Item("Codesets.Used");
+
+    // const componentScenarios = 0;  // Needs to be implemented
 
 
     this.setState({
       results: {
-        componentScenarios,
+        codesets,
         components,
         fields,
         fixMessageTypes,
