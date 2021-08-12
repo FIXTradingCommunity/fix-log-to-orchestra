@@ -23,6 +23,9 @@ const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/14760
 
 const currentYear = new Date().getFullYear();
 
+const splittedVersion = version.split('.');
+const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}`;
+
 interface IDecodedUserData {
   at_hash: string;
   sub: string;
@@ -240,7 +243,7 @@ export default class App extends Component {
           </div>
         </div>
         <footer className="container">
-          <p>Version {version}</p>
+          <p>Version {appVersion}</p>
           <p>{App.rightsMsg}</p>
         </footer>
         {
