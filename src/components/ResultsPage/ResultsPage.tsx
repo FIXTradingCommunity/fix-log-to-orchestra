@@ -4,7 +4,7 @@ import "./resultsPage.css";
 
 interface Props {
   results?: {
-    componentScenarios: number;
+    codesets: number;
     components: number;
     fields: number;
     fixMessageTypes: number;
@@ -19,7 +19,7 @@ interface Props {
 const ProgressCircle: React.FC<Props> = (props) => {
   const { results, downloadButton, onClose } = props;
 
-  let componentScenarios = 0;
+  let codesets = 0;
   let components = 0;
   let fields = 0;
   let fixMessageTypes = 0;
@@ -28,7 +28,7 @@ const ProgressCircle: React.FC<Props> = (props) => {
   let messagesCount = 0;
   
   if (results) {
-    componentScenarios = results.componentScenarios;
+    codesets = results.codesets;
     components = results.components;
     fields = results.fields;
     fixMessageTypes = results.fixMessageTypes;
@@ -49,7 +49,7 @@ const ProgressCircle: React.FC<Props> = (props) => {
           <div className="resultsValue">{fixMessageTypes}</div>
         </div>
         <div className="resultsValueContainer">
-          <div className="resultsLabel"># scenarios created</div>
+          <div className="resultsLabel"># message scenarios created</div>
           <div className="resultsValue">{messageScenarios}</div>
         </div>
         <div className="resultsValueContainer">
@@ -65,8 +65,8 @@ const ProgressCircle: React.FC<Props> = (props) => {
           <div className="resultsValue">{components}</div>
         </div>
         <div className="resultsValueContainer">
-          <div className="resultsLabel"># component scenarios discovered</div>
-          <div className="resultsValue">{componentScenarios}</div>
+          <div className="resultsLabel"># code sets discovered</div>
+          <div className="resultsValue">{codesets}</div>
         </div>
         <div className="resultsValueContainer">
           <div className="resultsLabel"># FIX messages from log file processed</div>

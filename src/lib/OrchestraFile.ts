@@ -546,9 +546,12 @@ export default class OrchestraFile {
         const codesetsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const codesetsElement: Element = codesetsSnapshot.snapshotItem(0) as Element;
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets/fixr:codeSet", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        var countCodesUsed : number = 0;
-        var countCustomCodes : number = 0;
-        var countCodesRemoved : number = 0;
+        var countCodesUsed: number = 0;
+        var countCustomCodes: number = 0;
+        var countCodesRemoved: number = 0;
+        var countCodesetsUsed: number = 0;
+        var countCustomCodesets: number = 0;
+        var countCodesetsRemoved: number = 0;
         codesetsModel.forEach((codeset: CodesetModel) => {
             const usedCodes: CodeModel[] = codeset.getUsedCodes();
             const usedCodeValues: string[] = usedCodes.map((cs) => cs.value);
@@ -563,6 +566,7 @@ export default class OrchestraFile {
                 }
             }
             if (!codesetElement) {
+                countCustomCodesets++;
                 codesetElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:codeSet");
                 codesetElement.setAttribute("name", codeset.name);
                 codesetElement.setAttribute("scenario", codeset.scenario);
@@ -571,6 +575,7 @@ export default class OrchestraFile {
                 codesetsElement.appendChild(codesetElement);
             }
             if (usedCodes.length > 0) {
+                countCodesetsUsed++;
                 codesetElement.setAttribute("supported", "supported");
                 const codeElements: HTMLCollectionOf<Element> = codesetElement.getElementsByTagName("fixr:code");
                 let domCodeValues: string[] = [];
@@ -580,7 +585,7 @@ export default class OrchestraFile {
                         domCodeValues.push(domCodeValue);
                     }
                 }
-                
+
                 const elementsToRemove = new Array<Element>();
                 for (let i: number = 0; i < codeElements.length; i++) {
                     const codeElementValue: string | null = codeElements[i].getAttribute("value");
@@ -619,12 +624,16 @@ export default class OrchestraFile {
                     }
                 });
             } else if (!this.appendOnly) {
+                countCodesetsRemoved++;
                 codesetsElement.removeChild(codesetElement);
             }
         });
         this.repositoryStatistics.Add("Codes.Used",countCodesUsed);
         this.repositoryStatistics.Add("Codes.Removed",countCodesRemoved);
         this.repositoryStatistics.Add("Codes.Added",countCustomCodes);
+        this.repositoryStatistics.Add("Codesets.Used",countCodesetsUsed);
+        this.repositoryStatistics.Add("Codesets.Removed",countCodesetsRemoved);
+        this.repositoryStatistics.Add("Codesets.Added",countCustomCodesets);
     }
     private isUserDefined(field: FieldModel) : boolean {
         let tagNumber: number = +field.id;
