@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import ProgressCircle from "../ProgressCircle/ProgressCircle";
 import "./fileInput.css";
+import { readXMLfromURL } from "./helper";
 
 interface Props {
   label: string;
@@ -22,11 +23,17 @@ class FileInput extends Component<Props> {
   public render() {
     const { label, accept, multiple = false, error } = this.props;
     const { pct, fileName } = this.state;
+ 
+    const fixOnClick = async (e: any): Promise<any> => {
+      e.stopPropagation(); 
+      const file = await readXMLfromURL('https://raw.githubusercontent.com/FIXTradingCommunity/orchestrations/master/FIX%20Standard/FIX44Session.xml')
+      this.onChange(null as any, [file] as any);
+    }
 
     return (
       <div className="fileInput">
         <p className="inputLabel">{label}</p>
-        <Dropzone onDrop={this.onDrop as () => {}} multiple={multiple}>
+        <Dropzone onDrop={this.onDrop as any} multiple={multiple} >
           {({ getRootProps, getInputProps, isDragActive, draggedFiles }) => {
             
             const isValidFileType = this.isValidType(draggedFiles[0]);
@@ -60,6 +67,7 @@ class FileInput extends Component<Props> {
                         <div className="inputContent">
                           <p className="inputText">Drag file to read or</p>
                           <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
+                          {label === "Reference Orchestra file" && <div onClick={fixOnClick} className="chooseFileButton fixFileButton">Fix File</div>}
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}
                         { error && <p className="fileName inputTextError">{error}</p> }
@@ -78,23 +86,23 @@ class FileInput extends Component<Props> {
   public isValidType = (file: File | undefined) => {
     const acceptedType = this.props.accept && this.props.accept.replace(".", "");
     const fileType = file && file.type.split("/")[1];
+    
 
     if (!file || !acceptedType || (!fileType && !acceptedType)) { return true; }
     
     return acceptedType === fileType
   }
 
-  public onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files && e.target.files;
-
+  public onChange = async (e: React.ChangeEvent<HTMLInputElement>, repoFiles?: File[]) => { 
+    const files = e ? e.target.files && e.target.files : repoFiles;
+    
     if (this.props.clearError) {
       this.props.clearError();
-    }
+    }    
     this.handleChange(files as FileList);
   };
 
-  public handleChange = (files: FileList) => {
-
+  public handleChange = (files: FileList) => { 
     const filesArray = new Array(...files);
 
     const areFilesValid = filesArray.every(f => this.isValidType(f));
@@ -112,7 +120,7 @@ class FileInput extends Component<Props> {
         fileName: files[0] ? files[0].name : ""
       })
     }
-
+    this.setProgress(100);
     this.props.onChange(files);
   }
 
@@ -129,7 +137,7 @@ class FileInput extends Component<Props> {
     })
   }
 
-  private onDrop = (acceptedFiles: FileList) => {
+  private onDrop = async (acceptedFiles: FileList) => {
     this.handleChange(acceptedFiles);
   };
 }

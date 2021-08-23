@@ -90,7 +90,7 @@ export default class App extends Component {
   constructor(props: {}) {
     super(props)
 
-    Sentry.init({ dsn: SENTRY_DNS_KEY });
+    // Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
   public render() {
@@ -307,8 +307,12 @@ export default class App extends Component {
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {
+    console.log("fileList", fileList);
+    
     if (fileList && fileList.length > 0) {
       this.referenceFile = fileList[0];
+      console.log("fileList[0]", fileList[0]);
+      
     }
   };
   private inputLogs = (fileList: FileList | null): void => {
@@ -405,7 +409,12 @@ export default class App extends Component {
       results: undefined,
       showResults: false,
     });
-
+    console.log("createOrchestra");
+    console.log("this.referenceFile", this.referenceFile);
+    console.log("this.logFiles", this.logFiles);
+    
+    
+    
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
       this.setState({ showAlerts: false, creatingFile: true });
@@ -422,7 +431,7 @@ export default class App extends Component {
         }
       } catch (error) {
         if (error) {
-          Sentry.captureException(error);
+          // Sentry.captureException(error);
           
           this.alertMsg = {
             title: this.getErrorTitle(error.name),
@@ -521,16 +530,16 @@ export default class App extends Component {
       }
 
       const userData = (decoded as IDecodedUserData);
-      Sentry.configureScope((scope) => {
-        scope.setUser({
-          Employer: userData.Employer,
-          email: userData.email,
-          firstname: userData.firstname,
-          groups: userData.groups,
-          lastname: userData.lastname,
-          sub: userData.sub,
-        });
-      });
+      // Sentry.configureScope((scope) => {
+      //   scope.setUser({
+      //     Employer: userData.Employer,
+      //     email: userData.email,
+      //     firstname: userData.firstname,
+      //     groups: userData.groups,
+      //     lastname: userData.lastname,
+      //     sub: userData.sub,
+      //   });
+      // });
 
       this.setState({
         authVerified: true,
