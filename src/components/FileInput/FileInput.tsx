@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import ProgressCircle from "../ProgressCircle/ProgressCircle";
 import "./fileInput.css";
-import { readXMLfromURL } from "./helper";
+import { readXMLfromURL } from "../helper";
+import FileDialog from '../FileDialog/FileDialog';
 
 interface Props {
   label: string;
@@ -11,6 +12,7 @@ interface Props {
   onChange: (files: FileList) => void;
   error?: string;
   clearError?: () => void;
+  fixStandardFiles?: object[] | null;
 }
 
 class FileInput extends Component<Props> {
@@ -21,12 +23,11 @@ class FileInput extends Component<Props> {
   }
 
   public render() {
-    const { label, accept, multiple = false, error } = this.props;
+    const { label, accept, multiple = false, error, fixStandardFiles = null } = this.props;
     const { pct, fileName } = this.state;
- 
-    const fixOnClick = async (e: any): Promise<any> => {
-      e.stopPropagation(); 
-      const file = await readXMLfromURL('https://raw.githubusercontent.com/FIXTradingCommunity/orchestrations/master/FIX%20Standard/FIX44Session.xml')
+    
+    const fixOnClick = async (fileObject: any): Promise<any> => { 
+      const file = await readXMLfromURL(fileObject)
       this.onChange(null as any, [file] as any);
     }
 
@@ -67,7 +68,7 @@ class FileInput extends Component<Props> {
                         <div className="inputContent">
                           <p className="inputText">Drag file to read or</p>
                           <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
-                          {label === "Reference Orchestra file" && <div onClick={fixOnClick} className="chooseFileButton fixFileButton">Fix File</div>}
+                          {fixStandardFiles && <FileDialog fixStandardFiles={fixStandardFiles} fixOnClick={fixOnClick} />}
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}
                         { error && <p className="fileName inputTextError">{error}</p> }

@@ -18,6 +18,7 @@ import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import ResultsPage from './ResultsPage/ResultsPage';
 import { File } from '../lib/enums';
+import { getFileList } from "./helper";
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
@@ -75,6 +76,7 @@ export default class App extends Component {
     results: undefined,
     showResults: false,
     authVerified: false,
+    fixStandardFiles: null,
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -89,7 +91,6 @@ export default class App extends Component {
 
   constructor(props: {}) {
     super(props)
-
     // Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
@@ -115,6 +116,7 @@ export default class App extends Component {
                 <FileInput
                   label="Reference Orchestra file"
                   accept=".xml"
+                  fixStandardFiles={this.state.fixStandardFiles}
                   onChange={this.inputOrchestra}
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
@@ -271,8 +273,11 @@ export default class App extends Component {
     );
   }
 
-  public componentDidMount() {
+  public async componentDidMount() {
     this.CheckAuthenticated();
+    const data = await getFileList();
+    const filteredData = data && data.filter((e: any) => !(e.name === "Readme.md" || e.name === "pom.xml"));
+    this.setState({fixStandardFiles: filteredData});
   }
 
   private handleClearFields() {
@@ -307,12 +312,9 @@ export default class App extends Component {
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {
-    console.log("fileList", fileList);
     
     if (fileList && fileList.length > 0) {
       this.referenceFile = fileList[0];
-      console.log("fileList[0]", fileList[0]);
-      
     }
   };
   private inputLogs = (fileList: FileList | null): void => {
@@ -409,11 +411,6 @@ export default class App extends Component {
       results: undefined,
       showResults: false,
     });
-    console.log("createOrchestra");
-    console.log("this.referenceFile", this.referenceFile);
-    console.log("this.logFiles", this.logFiles);
-    
-    
     
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
