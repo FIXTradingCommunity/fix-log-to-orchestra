@@ -1,6 +1,6 @@
+import { GitStandardFile, FixStandardFile } from '../types/types';
 
-
-export const readXMLfromURL = (file: any) => new Promise((resolve, reject) => {
+export const readXMLfromURL = (file: GitStandardFile): any => new Promise((resolve, reject) => {
   const request = new XMLHttpRequest();
   request.open("GET", file.download_url, true);
   request.responseType = 'document';
@@ -10,7 +10,7 @@ export const readXMLfromURL = (file: any) => new Promise((resolve, reject) => {
       if (request.status === 200) {
         const oSerializer = new XMLSerializer();
         const sXML = oSerializer.serializeToString(request.responseXML as Node);
-        const newFile: any = new Blob([sXML], {type : 'text/xml'});
+        const newFile: FixStandardFile = new Blob([sXML], {type : 'text/xml'});
         newFile.name = file.name;
         newFile.path = file.path;
         resolve(newFile);

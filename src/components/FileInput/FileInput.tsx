@@ -4,6 +4,7 @@ import ProgressCircle from "../ProgressCircle/ProgressCircle";
 import "./fileInput.css";
 import { readXMLfromURL } from "../helper";
 import FileDialog from '../FileDialog/FileDialog';
+import { GitStandardFile, FixStandardFile } from "../../types/types"
 
 interface Props {
   label: string;
@@ -12,7 +13,7 @@ interface Props {
   onChange: (files: FileList) => void;
   error?: string;
   clearError?: () => void;
-  fixStandardFiles?: object[] | null;
+  fixStandardFiles?: GitStandardFile[];
 }
 
 class FileInput extends Component<Props> {
@@ -27,8 +28,8 @@ class FileInput extends Component<Props> {
     const { pct, fileName } = this.state;
     
     const fixOnClick = async (fileObject: any): Promise<any> => { 
-      const file = await readXMLfromURL(fileObject)
-      this.onChange(null as any, [file] as any);
+      const file: FixStandardFile = await readXMLfromURL(fileObject)
+      this.onChange(null as any, [file]);
     }
 
     return (
@@ -94,7 +95,7 @@ class FileInput extends Component<Props> {
     return acceptedType === fileType
   }
 
-  public onChange = async (e: React.ChangeEvent<HTMLInputElement>, repoFiles?: File[]) => { 
+  public onChange = async (e: React.ChangeEvent<HTMLInputElement>, repoFiles?: FixStandardFile[]) => { 
     const files = e ? e.target.files && e.target.files : repoFiles;
     
     if (this.props.clearError) {

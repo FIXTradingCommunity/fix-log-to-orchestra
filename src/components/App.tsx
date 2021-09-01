@@ -19,6 +19,7 @@ import ProgressBar from './ProgressBar/ProgressBar';
 import ResultsPage from './ResultsPage/ResultsPage';
 import { File } from '../lib/enums';
 import { getFileList } from "./helper";
+import { GitStandardFile, IDecodedUserData, IDecoded, ErrorMsg } from "../types/types";
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
@@ -26,40 +27,6 @@ const currentYear = new Date().getFullYear();
 
 const splittedVersion = version.split('.');
 const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}`;
-
-interface IDecodedUserData {
-  at_hash: string;
-  sub: string;
-  firstname: string;
-  Employer: string;
-  "Zip/Postcode": string | null;
-  iss: string;
-  groups: string[] | null;
-  Title: null;
-  Website: null;
-  "State/Region": string | null;
-  "City": string | null;
-  "Street Address 1": string | null;
-  "Job Title": string | null;
-  nonce: string | null;
-  "Street Address 2": string | null;
-  lastname: string;
-  aud: string[];
-  auth_time: string;
-  Country: string | null;
-  exp: number;
-  iat: number;
-  email: string;
-}
-
-interface IDecoded {
-  exp?: number;
-}
-
-interface ErrorMsg {
-  title: string,
-  message: string
-}
 
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
@@ -76,7 +43,7 @@ export default class App extends Component {
     results: undefined,
     showResults: false,
     authVerified: false,
-    fixStandardFiles: null,
+    fixStandardFiles: [],
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -91,7 +58,7 @@ export default class App extends Component {
 
   constructor(props: {}) {
     super(props)
-    // Sentry.init({ dsn: SENTRY_DNS_KEY });
+    Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
   public render() {
@@ -275,9 +242,9 @@ export default class App extends Component {
 
   public async componentDidMount() {
     this.CheckAuthenticated();
-    const data = await getFileList();
-    const filteredData = data && data.filter((e: any) => !(e.name === "Readme.md" || e.name === "pom.xml"));
-    this.setState({fixStandardFiles: filteredData});
+    const data: GitStandardFile[] = await getFileList();
+    const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
+    this.setState({ fixStandardFiles: filteredData });
   }
 
   private handleClearFields() {
@@ -308,11 +275,9 @@ export default class App extends Component {
       showResults: false,
       showAlerts: false
     });
-
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {
-    
     if (fileList && fileList.length > 0) {
       this.referenceFile = fileList[0];
     }
@@ -428,7 +393,7 @@ export default class App extends Component {
         }
       } catch (error) {
         if (error) {
-          // Sentry.captureException(error);
+          Sentry.captureException(error);
           
           this.alertMsg = {
             title: this.getErrorTitle(error.name),
@@ -527,16 +492,16 @@ export default class App extends Component {
       }
 
       const userData = (decoded as IDecodedUserData);
-      // Sentry.configureScope((scope) => {
-      //   scope.setUser({
-      //     Employer: userData.Employer,
-      //     email: userData.email,
-      //     firstname: userData.firstname,
-      //     groups: userData.groups,
-      //     lastname: userData.lastname,
-      //     sub: userData.sub,
-      //   });
-      // });
+      Sentry.configureScope((scope) => {
+        scope.setUser({
+          Employer: userData.Employer,
+          email: userData.email,
+          firstname: userData.firstname,
+          groups: userData.groups,
+          lastname: userData.lastname,
+          sub: userData.sub,
+        });
+      });
 
       this.setState({
         authVerified: true,
