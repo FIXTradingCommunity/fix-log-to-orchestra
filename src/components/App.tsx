@@ -18,6 +18,8 @@ import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import ResultsPage from './ResultsPage/ResultsPage';
 import { File } from '../lib/enums';
+import { getFileList } from "./helper";
+import { GitStandardFile, IDecodedUserData, IDecoded, ErrorMsg } from "../types/types";
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
@@ -25,40 +27,6 @@ const currentYear = new Date().getFullYear();
 
 const splittedVersion = version.split('.');
 const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}`;
-
-interface IDecodedUserData {
-  at_hash: string;
-  sub: string;
-  firstname: string;
-  Employer: string;
-  "Zip/Postcode": string | null;
-  iss: string;
-  groups: string[] | null;
-  Title: null;
-  Website: null;
-  "State/Region": string | null;
-  "City": string | null;
-  "Street Address 1": string | null;
-  "Job Title": string | null;
-  nonce: string | null;
-  "Street Address 2": string | null;
-  lastname: string;
-  aud: string[];
-  auth_time: string;
-  Country: string | null;
-  exp: number;
-  iat: number;
-  email: string;
-}
-
-interface IDecoded {
-  exp?: number;
-}
-
-interface ErrorMsg {
-  title: string,
-  message: string
-}
 
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
@@ -75,6 +43,7 @@ export default class App extends Component {
     results: undefined,
     showResults: false,
     authVerified: false,
+    fixStandardFiles: [],
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -89,7 +58,6 @@ export default class App extends Component {
 
   constructor(props: {}) {
     super(props)
-
     Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
@@ -115,6 +83,7 @@ export default class App extends Component {
                 <FileInput
                   label="Reference Orchestra file"
                   accept=".xml"
+                  fixStandardFiles={this.state.fixStandardFiles}
                   onChange={this.inputOrchestra}
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
@@ -271,8 +240,11 @@ export default class App extends Component {
     );
   }
 
-  public componentDidMount() {
+  public async componentDidMount() {
     this.CheckAuthenticated();
+    const data: GitStandardFile[] = await getFileList();
+    const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
+    this.setState({ fixStandardFiles: filteredData });
   }
 
   private handleClearFields() {
@@ -303,7 +275,6 @@ export default class App extends Component {
       showResults: false,
       showAlerts: false
     });
-
   }
 
   private inputOrchestra = (fileList: FileList | null): void => {
@@ -405,7 +376,7 @@ export default class App extends Component {
       results: undefined,
       showResults: false,
     });
-
+    
     if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
       this.logProgress && this.configurationProgress) {
       this.setState({ showAlerts: false, creatingFile: true });
