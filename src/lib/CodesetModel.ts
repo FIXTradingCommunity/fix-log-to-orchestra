@@ -101,6 +101,7 @@ export class CodeModel implements Usable {
     /**
      * Search pattern for named code value with Orchestra DSL prefix
      */
+    // eslint-disable-next-line no-useless-escape
     static readonly codeNamePattern: RegExp = new RegExp("/\^(\S*)/");
 
     /**

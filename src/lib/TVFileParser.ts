@@ -27,7 +27,7 @@ export class TVFieldParser {
         if (index > this.str.length - 1) {
             return false;
         }
-        for (; this.str.charAt(index) != TVFieldParser.tagDelimiter && index < this.str.length - 1; index++);
+        for (; this.str.charAt(index) !== TVFieldParser.tagDelimiter && index < this.str.length - 1; index++);
         if (index < this.str.length) {
             index++;
             this.valueOffset = index;
@@ -40,7 +40,7 @@ export class TVFieldParser {
             this.nextValueLength = 0;
             return this.valueOffset + this.valueLength < this.str.length;
         } else {
-            for (; this.str.charAt(index) != TVFieldParser.fieldDelimiter && index < this.str.length - 1; index++);
+            for (; this.str.charAt(index) !== TVFieldParser.fieldDelimiter && index < this.str.length - 1; index++);
             if (index <= this.str.length - 1) {
                 this.valueLength = index - this.valueOffset;
                 if (TVFieldParser.lengthFieldIds.indexOf(this.tag) >= 0) {
@@ -102,7 +102,7 @@ export class TVMessageParser implements Iterator<TVFieldParser> {
 
     next(): IteratorResult<TVFieldParser> {
         if (!this.lastTagFound && this.fieldParser.next()) {
-            if (this.fieldParser.tag == TVMessageParser.lastTag) {
+            if (this.fieldParser.tag === TVMessageParser.lastTag) {
                 this.lastTagFound = true;
             }
             return {
@@ -141,8 +141,6 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
     private messageEndOffset: number = 0;
     private str: string = "";
     public unprocessedMessages: number = 0;
-    constructor() {
-    }
     get lastMessageOffset(): number {
         return this.messageEndOffset;
     }
@@ -156,7 +154,7 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
     next(): IteratorResult<TVMessageParser> {
         // find start of the next message using BeginString
         const messageStartOffset: number = this.str.indexOf(TVFileParser.messageStartDelimiter, this.messageEndOffset);
-        if (messageStartOffset != -1) {
+        if (messageStartOffset !== -1) {
             const delimiterCharIndex = this.str.indexOf(TVFileParser.bodyLengthTag + "=", messageStartOffset) - 1;
             if (delimiterCharIndex === -1) {
                 // delimiter not found
