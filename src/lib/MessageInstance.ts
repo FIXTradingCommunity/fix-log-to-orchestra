@@ -6,9 +6,6 @@
  * A FIX tag-value message
  */
 export default class MessageInstance extends Array<FieldInstance> {
-    constructor() {
-        super();
-    }
     /**
      * @returns the value of the third field (tag 35). If not populated, returns undefined.
      */
@@ -39,7 +36,7 @@ export class FieldInstance {
      * @returns true if two arrays are same length and all fields are equal
      */
     static arrayEquals(fields1: FieldInstance[], fields2: FieldInstance[]): boolean {
-        if (fields1.length != fields2.length) {
+        if (fields1.length !== fields2.length) {
             return false;
         }
         for (let i = 0; i < fields1.length; i++) {

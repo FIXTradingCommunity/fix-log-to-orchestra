@@ -32,7 +32,7 @@ export default class Log2Orchestra {
         this.referenceFile = referenceFile;
         this.logFiles = logFiles;
         this.configurationFile = configurationFile;
-        this.orchestraFileName = orchestraFileName
+        this.orchestraFileName = orchestraFileName;
         this.appendOnly = appendOnly;
         this.inputProgress = inputProgress;
         this.outputProgress = outputProgress;
@@ -68,6 +68,20 @@ export default class Log2Orchestra {
             //output.extractOrchestraModel(outreferenceModel);
 
             const logModel: LogModel = new LogModel(referenceModel);
+            let logSource = '';
+            if (this.logFiles.length === 1) {
+                logSource = this.logFiles[0].name;
+            }
+            else {
+                for (let i = 0; i < this.logFiles.length; i++) {
+                    if (logSource === '') {
+                        logSource = this.logFiles[i].name;
+                    }
+                    else {
+                        logSource += `;${this.logFiles[i].name}`;
+                    }
+                }
+            }
 
             // if a configuration file was selected, read it. Otherwise, use default configuration to differentiate message scenarios.
             if (this.configurationFile) {
@@ -88,7 +102,7 @@ export default class Log2Orchestra {
 
             }
             // update the output Orchestra file from the model
-            output.updateDomFromModel(logModel, this.outputProgress);
+            output.updateDomFromModel(logModel, this.outputProgress, logSource);
             if (this.onFinish) {
                 this.onFinish(output, totalMessages);
             }

@@ -42,7 +42,7 @@ function SimpleDialog(props: SimpleDialogProps) {
     
   return (
     <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
-      <DialogTitle id="simple-dialog-title">Select Fix Standard File</DialogTitle>
+      <DialogTitle id="simple-dialog-title">Select FIX Standard File</DialogTitle>
       <List>
         {fixStandardFiles && fixStandardFiles.map((file: any) => (
           <ListItem button onClick={(e) => handleListItemClick(file, e)} key={file.name}>
@@ -81,7 +81,7 @@ export default function SimpleDialogDemo(props: any) {
   
   return (
     <div onClick={handleClickOpen} className="chooseFileButton fixFileButton">
-        Fix Standard
+        FIX Standard
       <SimpleDialog selectedValue={""} open={open} handleCancel={handleCancel} onClose={handleClose} fixStandardFiles={fixStandardFiles} />
     </div>
   );

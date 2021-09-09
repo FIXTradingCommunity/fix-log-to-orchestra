@@ -9,7 +9,7 @@ import OrchestraModel, { CodesetsModel, ComponentsModel, FieldsModel, GroupsMode
 import { IsSupportedfromString, Presence, PresencefromString, StructureModel } from "./StructureModel";
 import { KeyedCollection } from "./KeyedCollection";
 //import { ActionViewArray } from "material-ui/svg-icons";
-import {xml} from "vkbeautify";
+import { xml } from "vkbeautify";
 import { File } from './enums';
 
 export default class OrchestraFile {
@@ -130,8 +130,8 @@ export default class OrchestraFile {
         });
     }
 
-    updateDomFromModel(logModel: LogModel, progressNode: HTMLElement | null): void {
-        this.updateDomMetadata();
+    updateDomFromModel(logModel: LogModel, progressNode: HTMLElement | null, logSource: string): void {
+        this.updateDomMetadata(logSource);
         this.updateDomCodes(logModel.model.codesets);
         this.updateDomFields(logModel.model.fields);
         this.addDomMessages(logModel.model.messages);
@@ -282,31 +282,53 @@ export default class OrchestraFile {
         structureElement.insertBefore(memberElement, insertionPoint);
     }
 
-    private updateDomMetadata(): void {
+    private updateDomMetadata(logSource: string): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:metadata", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const metadataElement: Element = nodesSnapshot.snapshotItem(0) as Element;
-        const elementsToRemove: Array<Element> = [
-            metadataElement.getElementsByTagName('dc:creator')[0],
-            metadataElement.getElementsByTagName('dc:source')[0],
-            metadataElement.getElementsByTagName('dc:rights')[0]
-        ];
-        if (elementsToRemove) elementsToRemove.map(element => element && metadataElement.removeChild(element));
+        while (metadataElement.firstElementChild) {
+            metadataElement.removeChild(metadataElement.firstElementChild)
+        }
+
+        const mainSnapshot: XPathResult = this.dom.evaluate("/fixr:repository", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        const repository = mainSnapshot.snapshotItem(0) as Element;
+        const sourceVersion: string | null = repository.getAttribute("version");
+
+        const conformsToElement: Element = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:conformsTo");
+        const conformsToTextNode: Text = this.dom.createTextNode('FIX Orchestra Technical Standard V1.0');
+        conformsToElement.appendChild(conformsToTextNode);
+        metadataElement.appendChild(conformsToElement);
+
         const contributorElement: Element = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:contributor");
-        const textNode: Text = this.dom.createTextNode("log2orchestra");
-        contributorElement.appendChild(textNode);
+        const contributorTextNode: Text = this.dom.createTextNode("log2orchestra");
+        contributorElement.appendChild(contributorTextNode);
         metadataElement.appendChild(contributorElement);
+
         const timestamp: string = new Date().toISOString();
-        let dateElement: Element = metadataElement.getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date")[0];
-        if (dateElement) {
-            dateElement.childNodes[0].nodeValue = timestamp;
-        }
-        else {
-            dateElement = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:date");
-            const timeText: Text = this.dom.createTextNode(timestamp);
-            dateElement.appendChild(timeText);
-            metadataElement.appendChild(dateElement);
-        }
+        const createdDateElement: Element = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:created");
+        const createdDateTextNode: Text = this.dom.createTextNode(timestamp);
+        createdDateElement.appendChild(createdDateTextNode);
+        metadataElement.appendChild(createdDateElement);
+
+        const formatElement = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:format");
+        const formatText: Text = this.dom.createTextNode(OrchestraFile.MIME_TYPE);
+        formatElement.appendChild(formatText);
+        metadataElement.appendChild(formatElement);
+
+        const isVersionOfElement = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:isVersionOf");
+        const isVersionOfText: Text = this.dom.createTextNode(sourceVersion || 'Custom Version');
+        isVersionOfElement.appendChild(isVersionOfText);
+        metadataElement.appendChild(isVersionOfElement);
+
+        const sourceElement = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:source");
+        const sourceText: Text = this.dom.createTextNode(logSource);
+        sourceElement.appendChild(sourceText);
+        metadataElement.appendChild(sourceElement);
+
+        const titleElement = this.dom.createElementNS("http://purl.org/dc/elements/1.1/", "dc:title");
+        const titleText: Text = this.dom.createTextNode(this.file.name.split('.xml')[0]);
+        titleElement.appendChild(titleText);
+        metadataElement.appendChild(titleElement);
     }
     contents(): Blob {
         return new Blob([OrchestraFile.serialize(this.document)], { type: OrchestraFile.MIME_TYPE });
@@ -637,7 +659,7 @@ export default class OrchestraFile {
     }
     private isUserDefined(field: FieldModel) : boolean {
         let tagNumber: number = +field.id;
-        if ((tagNumber >= 5000 && tagNumber <= 40000) || tagNumber >= 60000) {
+        if ((tagNumber >= 5000 && tagNumber <= 9999) || (tagNumber >= 20000  && tagNumber <= 39999)) {
             return true;
         }
         return false;
