@@ -659,7 +659,7 @@ export default class OrchestraFile {
     }
     private isUserDefined(field: FieldModel) : boolean {
         let tagNumber: number = +field.id;
-        if ((tagNumber >= 5000 && tagNumber <= 40000) || tagNumber >= 60000) {
+        if ((tagNumber >= 5000 && tagNumber <= 9999) || (tagNumber >= 20000  && tagNumber <= 39999)) {
             return true;
         }
         return false;
