@@ -9,7 +9,7 @@
     "@types/jest": "23.3.10",
     "@types/jsonwebtoken": "^8.3.2",
     "@types/material-ui": "^0.21.7",
-    "@types/node": "10.12.12",
+    "@types/node": "^16.9.6",
     "@types/react": "^16.9.17",
     "@types/react-dom": "16.0.11",
     "@types/vkbeautify": "^0.99.2",
@@ -25,7 +25,7 @@
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.17.0",
     "tslint-react": "^3.6.0",
-    "typescript": "^3.5.3",
+    "typescript": "^3.9.10",
     "vkbeautify": "^0.99.3",
     "xml2js": "^0.4.23"
   },

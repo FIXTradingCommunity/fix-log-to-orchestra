@@ -58,6 +58,7 @@ export default class LogReader {
                     messageResult = logParser.next();
                 }
             });
+            // Next read should be from the end of the last good message
             fileOffset += logParser.lastMessageOffset;
         }
         this.messagesCount -= logParser.unprocessedMessages;
