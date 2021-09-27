@@ -135,7 +135,7 @@ export class TVMessageParser implements Iterator<TVFieldParser> {
 // tslint:disable-next-line: max-classes-per-file
 export default class TVFileParser implements Iterator<TVMessageParser> {
     static readonly messageStartDelimiter: string = "8=FIX";
-    static readonly checksumTag: string = "10=";
+    static readonly checksumTag: string = String.fromCharCode(1) + "10=";
     static readonly fieldDelimiter: string = String.fromCharCode(1);
     private messageEndOffset: number = 0;
     private str: string = "";
