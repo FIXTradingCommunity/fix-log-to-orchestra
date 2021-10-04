@@ -9,6 +9,7 @@ import { ComponentRef, GroupRef } from "./MessageModel";
 import OrchestraFile from "./OrchestraFile";
 import OrchestraModel from "./OrchestraModel";
 import { TVFieldParser } from "./TVFileParser";
+import LogWarnings from "./LogWarnings";
 
 /**
  * Controller for log2orchestra operations
@@ -19,6 +20,7 @@ export default class Log2Orchestra {
     private outputProgress: HTMLElement | null;
     private logProgress: HTMLElement | null;
     private configProgress: HTMLElement | null;
+    private logWarnings: LogWarnings;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
     private blob: Blob | undefined = undefined;
     private referenceFile: File;
@@ -27,18 +29,29 @@ export default class Log2Orchestra {
     private configurationFile: File | undefined;
     public onFinish: undefined | ((output: OrchestraFile, messagesCount: number) => void);
 
-    constructor(referenceFile: File, logFiles: FileList, configurationFile: File | undefined, orchestraFileName: string, appendOnly: boolean, inputProgress: HTMLElement | null, outputProgress: HTMLElement | null, logProgress: HTMLElement | null, configProgress: HTMLElement | null,
-        progressFunc: (progressNode: HTMLElement, percent: number) => void) {
-        this.referenceFile = referenceFile;
-        this.logFiles = logFiles;
-        this.configurationFile = configurationFile;
-        this.orchestraFileName = orchestraFileName;
-        this.appendOnly = appendOnly;
-        this.inputProgress = inputProgress;
-        this.outputProgress = outputProgress;
-        this.logProgress = logProgress;
-        this.configProgress = configProgress;
-        this.progressFunc = progressFunc;
+    constructor(
+      referenceFile: File,
+      logFiles: FileList,
+      configurationFile: File | undefined,
+      orchestraFileName: string,
+      appendOnly: boolean,
+      inputProgress: HTMLElement | null,
+      outputProgress: HTMLElement | null,
+      logProgress: HTMLElement | null,
+      configProgress: HTMLElement | null,
+      progressFunc: (progressNode: HTMLElement, percent: number) => void
+    ) {
+      this.referenceFile = referenceFile;
+      this.logFiles = logFiles;
+      this.configurationFile = configurationFile;
+      this.orchestraFileName = orchestraFileName;
+      this.appendOnly = appendOnly;
+      this.inputProgress = inputProgress;
+      this.outputProgress = outputProgress;
+      this.logProgress = logProgress;
+      this.configProgress = configProgress;
+      this.logWarnings = LogWarnings.getInstance();
+      this.progressFunc = progressFunc;
     }
 
     public async run(): Promise<Blob> {
@@ -94,6 +107,7 @@ export default class Log2Orchestra {
             var totalMessages : number = 0;
             // read and parse one or more FIX logs 
             for (let i = 0; i < this.logFiles.length; i++) {
+                this.logWarnings.setFileName(this.logFiles[i].name)
                 const logReader: LogReader = new LogReader(this.logFiles[i], logModel.messageListener, this.logProgress, this.progressFunc);
                 await logReader.readFile();
                 if (this.onFinish) {
@@ -107,8 +121,10 @@ export default class Log2Orchestra {
                 this.onFinish(output, totalMessages);
             }
             this.blob = output.contents();
-            return new Promise<Blob>(resolve =>
-                resolve(this.blob)
+            return new Promise<Blob>(resolve => {
+              if (this.blob)
+              return resolve(this.blob)
+            }
             );
         } catch (e) {
             return new Promise<Blob>((resolve, reject) =>
