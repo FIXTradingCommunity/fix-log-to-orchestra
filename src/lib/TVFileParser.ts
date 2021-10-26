@@ -7,7 +7,7 @@
  */
 export class TVFieldParser {
     static readonly tagDelimiter: string = "=";
-    static readonly fieldDelimiter: string = String.fromCharCode(1);
+    static fieldDelimiter: string = String.fromCharCode(1);
     static readonly nullFieldParser: TVFieldParser = new TVFieldParser("", 0);
     static lengthFieldIds: Array<string> = new Array<string>();
 
@@ -17,7 +17,7 @@ export class TVFieldParser {
     private valueLength: number = 0;
     private nextValueLength: number = 0;
 
-    constructor(str: string, offset: number, fieldDelimiter: string = String.fromCharCode(1)) {
+    constructor(str: string, offset: number) {
         this.str = str;
         this.tagOffset = offset;
     }
@@ -135,8 +135,9 @@ export class TVMessageParser implements Iterator<TVFieldParser> {
 // tslint:disable-next-line: max-classes-per-file
 export default class TVFileParser implements Iterator<TVMessageParser> {
     static readonly messageStartDelimiter: string = "8=FIX";
-    static readonly checksumTag: string = String.fromCharCode(1) + "10=";
-    static readonly fieldDelimiter: string = String.fromCharCode(1);
+    static readonly bodyLengthTag: string = "9=";
+    static readonly checksumTag: string = "10=";
+    private fieldDelimiter: string = String.fromCharCode(1);
     private messageEndOffset: number = 0;
     private str: string = "";
     public unprocessedMessages: number = 0;
@@ -154,9 +155,17 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
         // find start of the next message using BeginString
         const messageStartOffset: number = this.str.indexOf(TVFileParser.messageStartDelimiter, this.messageEndOffset);
         if (messageStartOffset !== -1) {
+            const delimiterCharIndex = this.str.indexOf(TVFileParser.bodyLengthTag, messageStartOffset) - 1;
+            // find the character before the second field, tag 9. It is the field delimiter in the log file.
+            if (messageStartOffset !== -1) {
+                this.fieldDelimiter = this.str.charAt(delimiterCharIndex);
+                TVFieldParser.fieldDelimiter = this.fieldDelimiter;
+            } else {
+                // default to SOH, but give warning
+            }
             const checksumOffset: number = this.str.indexOf(TVFileParser.checksumTag, messageStartOffset);
             if (checksumOffset !== -1) {
-                this.messageEndOffset = this.str.indexOf(TVFileParser.fieldDelimiter, checksumOffset);
+                this.messageEndOffset = this.str.indexOf(this.fieldDelimiter, checksumOffset);
                 if (this.messageEndOffset !== -1) {
                     return {
                         done: false,
