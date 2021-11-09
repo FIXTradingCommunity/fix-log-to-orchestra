@@ -14,6 +14,26 @@
   float: right;
 }
 
+.warningsWrapper {
+  width: 30%;
+  height: 85%;
+  max-height: 580px;
+  position: relative;
+  margin-left: 50px;
+  margin-top: 65px;
+  padding: 0px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.warningTitle {
+  color: goldenrod;
+  font-size: 20px;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
 .App-header {
     display: flex;
     align-items: center;
@@ -131,6 +151,7 @@ a {
 .contentContainer {
     display: flex;
     flex-grow: 1;
+    justify-content: space-between;
 }
 
 .form {
@@ -334,4 +355,51 @@ footer p {
     .container {
         max-width: 1360px;
     }
+}
+
+.openFileWrapper {
+  display: flex;
+  color: #737373;
+}
+
+.openFileWrapper > span {
+  font-weight: bold;
+  margin-left: 4px;
+  margin-bottom: 7px;
+  color: #737373;
+}
+
+.detailWarning {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  color: #737373;
+  white-space: nowrap;
+  margin-bottom: 5px;
+}
+
+.downloadWarningsButton {
+  background-color: #009FE3;
+  position: absolute;
+  bottom: 12px;
+  right: 0;
+  left: 0;
+  margin: auto;
+}
+
+.downloadWarningsButton:hover {
+  background-color: #006c9a;
+}
+
+.downloadButtonWrapper {
+  width: 100%;
+  background-color: white;
+  height: 70px;
+  position: absolute;
+  bottom: 0;
+}
+
+.itemsWrapper {
+  overflow-x: scroll;
+  max-height: 550px;
+  padding: 10px
 }

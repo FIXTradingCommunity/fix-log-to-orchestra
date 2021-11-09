@@ -20,6 +20,7 @@ import ResultsPage from './ResultsPage/ResultsPage';
 import { File } from '../lib/enums';
 import { getFileList } from "./helper";
 import { GitStandardFile, IDecodedUserData, IDecoded, ErrorMsg } from "../types/types";
+import LogWarnings from '../lib/LogWarnings';
 
 const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
@@ -44,6 +45,7 @@ export default class App extends Component {
     showResults: false,
     authVerified: false,
     fixStandardFiles: [],
+    warningsMessages: {},
   }
   private referenceFile: File | undefined = undefined;
   private logFiles: FileList | undefined = undefined;
@@ -55,6 +57,7 @@ export default class App extends Component {
   private logProgress: HTMLElement | undefined = undefined;
   private configurationProgress: HTMLElement | undefined = undefined;
   private alertMsg: ErrorMsg = { title: "", message: "" };
+  private logWarnings: LogWarnings = LogWarnings.getInstance();
 
   constructor(props: {}) {
     super(props)
@@ -210,6 +213,7 @@ export default class App extends Component {
             }
             <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
           </div>
+          {this.getWarnings(this.state.warningsMessages)}
         </div>
         <footer className="container">
           <p>Version {appVersion}</p>
@@ -247,6 +251,33 @@ export default class App extends Component {
     this.setState({ fixStandardFiles: filteredData });
   }
 
+  private getWarnings = (warningsMessages: {[key: string]: object[]}) => {
+      const logFileNames = Object.keys(warningsMessages);
+      return logFileNames.length > 0 ?
+       (
+        <>
+          <div className="warningsWrapper">
+              <h3 className="warningTitle">Warnings</h3>
+              <div className="itemsWrapper">
+                {logFileNames.map((e, index) => (
+                  <div key={index}>
+                    <div className="openFileWrapper">
+                      Reading logfile <span>{e}...</span>
+                    </div>
+                    {warningsMessages[e].map((e: any, index: any) =>
+                      <p key={index} className="detailWarning">Line {e.line}: {e.message}</p>)}
+                  </div>
+                ))}
+              </div>
+              <div className="downloadButtonWrapper">
+                <button className={"submitButton downloadWarningsButton"} onClick={() => this.logWarnings.downloadWarnings()}>Download</button>
+              </div>
+          </div>
+        </>
+      ) : <></>
+  }
+
+
   private handleClearFields() {
     if (this.referenceFile) {
       this.referenceFile = undefined;
@@ -268,12 +299,15 @@ export default class App extends Component {
       this.configurationProgress.clear()
     }
 
+    this.logWarnings.cleanWarnings();
+
     this.setState({
       downloadHref: "",
       downloadUrl: "",
       results: undefined,
       showResults: false,
-      showAlerts: false
+      showAlerts: false,
+      warningsMessages: {},
     });
   }
 
@@ -372,6 +406,7 @@ export default class App extends Component {
     });
   }
   private async createOrchestra(): Promise<void> {
+    this.logWarnings.cleanWarnings();
     this.setState({
       results: undefined,
       showResults: false,
@@ -402,7 +437,7 @@ export default class App extends Component {
         }
         this.setState({ showAlerts: true, creatingFile: false });
       }
-
+      this.setState({ warningsMessages: this.logWarnings.getWarnings()})
       if (runner.contents) {
         this.createLink(runner.contents);
         this.openResults();

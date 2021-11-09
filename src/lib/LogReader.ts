@@ -5,6 +5,7 @@
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import TVFileParser, { TVFieldParser, TVMessageParser } from "./TVFileParser";
 import { File } from './enums';
+import LogWarnings from "./LogWarnings";
 
 /**
  * Reads FIX message logs
@@ -14,19 +15,26 @@ export default class LogReader {
     public messagesCount: number;
     public badMessagesCount: number;
     private logFile: File;
+    private lineNumber: number = 1;
     private progressNode: HTMLElement | null;
+    private logWarnings: LogWarnings;
     private reader: FileReader = new FileReader();
     private messageListener: (message: MessageInstance) => void;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
 
-    constructor(logFile: File, messageListener: (message: MessageInstance) => void, progressNode: HTMLElement | null,
-        progressFunc: (progressNode: HTMLElement, percent: number) => void) {
-        this.logFile = logFile;
-        this.progressNode = progressNode;
-        this.messageListener = messageListener;
-        this.progressFunc = progressFunc;
-        this.messagesCount = 0;
-        this.badMessagesCount = 0;
+    constructor(
+      logFile: File,
+      messageListener: (message: MessageInstance) => void,
+      progressNode: HTMLElement | null,
+      progressFunc: (progressNode: HTMLElement, percent: number) => void
+    ) {
+      this.logFile = logFile;
+      this.progressNode = progressNode;
+      this.messageListener = messageListener;
+      this.logWarnings = LogWarnings.getInstance();
+      this.progressFunc = progressFunc;
+      this.messagesCount = 0;
+      this.badMessagesCount = 0;
     }
     async readFile(): Promise<void> {
         const logParser: TVFileParser = new TVFileParser();
@@ -54,6 +62,7 @@ export default class LogReader {
                         messageInstance.push(new FieldInstance(tag, value));
                         fieldResult = message.next();
                     }
+                    this.logWarnings.setLine(this.lineNumber++)
                     this.messageListener(messageInstance);
                     messageResult = logParser.next();
                 }

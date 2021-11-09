@@ -1,13 +1,13 @@
 /*!
  * Copyright 2019, FIX Protocol Ltd.
  */
-
 import CodesetModel, { CodeModel } from "./CodesetModel";
 import { messageScenarioKeysType } from "./ConfigurationFile";
 import MessageInstance, { FieldInstance } from "./MessageInstance";
 import MessageModel, { FieldContext, FieldModel, FieldRef, GroupModel } from "./MessageModel";
 import OrchestraModel from "./OrchestraModel";
 import { IsSupported, Presence, StructureMember, StructureModel } from "./StructureModel";
+import LogWarnings from "./LogWarnings";
 
 /**
  * Updates an OrchestraModel from log messages
@@ -15,12 +15,13 @@ import { IsSupported, Presence, StructureMember, StructureModel } from "./Struct
 export default class LogModel {
     private orchestraModel: OrchestraModel;
     private scenarioKeys: messageScenarioKeysType | undefined = undefined;
-
+    private logWarnings: LogWarnings;
     /**
      * @param orchestraModel model to update from logs
      */
     constructor(orchestraModel: OrchestraModel) {
         this.orchestraModel = orchestraModel;
+        this.logWarnings = LogWarnings.getInstance();
     }
     get model(): OrchestraModel {
         return this.orchestraModel;
@@ -126,15 +127,16 @@ export default class LogModel {
         }
         return MessageModel.key(messageName, scenario);
     }
+
     messageListener = (messageInstance: MessageInstance) => {
         // skip a malformed message
         if (!messageInstance.msgType) {
-            return;
+          this.logWarnings.logWarningsMessages("tag 35 not found");
+          return;
         }
         const messageModel: MessageModel | undefined = this.getMessageScenario(messageInstance);
         if (!messageModel) {
-            // must be a malformed message
-            return;
+          return;
         }
         let parseState: ParseState = new ParseState();
         for (let fieldInstance of messageInstance) {
@@ -143,10 +145,16 @@ export default class LogModel {
                 let fieldContext: FieldContext | undefined = messageModel.findFieldRef(fieldInstance.tag);
                 if (!fieldContext) {
                     let groupState: GroupState | undefined = parseState.advance(fieldInstance);
+
                     let newFieldRef: FieldRef = new FieldRef(fieldInstance.tag, FieldModel.defaultScenario, Presence.Optional);
                     if (groupState && groupState.instance <= groupState.instances) {
                         // if not already in the group and group intance less than numInGroup, add it to the group
                         // todo: warn about unknown field at end of last group instance
+
+                        if (groupState.instance === groupState.instances) {
+                          this.logWarnings.logWarningsMessages("User defined tag belongs to a repeating group or message root");
+                        }
+
                         fieldContext = [newFieldRef, groupState.group, undefined];
                         groupState.group.addMember(newFieldRef);
                     } else {
@@ -198,7 +206,10 @@ export default class LogModel {
                     }
                 }
                 this.incrementUse(fieldContext, fieldInstance);
-            } // else warn empty field tag
+            } else {
+              // else warn empty field tag
+              this.logWarnings.logWarningsMessages("empty field tag")
+            }
         }
     }
 

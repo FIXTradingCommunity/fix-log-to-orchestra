@@ -82,6 +82,10 @@
   cursor: pointer;
 }
 
+.chooseFileButton:hover {
+  background-color: #006c9a;
+}
+
 .fixFileButton {
   margin-top: 10px;
 }
