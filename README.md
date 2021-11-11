@@ -1,3 +1,5 @@
+[![NodeJS with Webpack](https://github.com/FIXTradingCommunity/fix-log-to-orchestra/actions/workflows/npm.yml/badge.svg)](https://github.com/FIXTradingCommunity/fix-log-to-orchestra/actions/workflows/npm.yml)
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
