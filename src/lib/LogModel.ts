@@ -145,14 +145,13 @@ export default class LogModel {
                 let fieldContext: FieldContext | undefined = messageModel.findFieldRef(fieldInstance.tag);
                 if (!fieldContext) {
                     let groupState: GroupState | undefined = parseState.advance(fieldInstance);
-
                     let newFieldRef: FieldRef = new FieldRef(fieldInstance.tag, FieldModel.defaultScenario, Presence.Optional);
                     if (groupState && groupState.instance <= groupState.instances) {
                         // if not already in the group and group intance less than numInGroup, add it to the group
                         // todo: warn about unknown field at end of last group instance
 
                         if (groupState.instance === groupState.instances) {
-                          this.logWarnings.logWarningsMessages("User defined tag belongs to a repeating group or message root");
+                          this.logWarnings.logWarningsMessages("Location of UDF ambiguous (inside or outside of repeating group)");
                         }
 
                         fieldContext = [newFieldRef, groupState.group, undefined];
