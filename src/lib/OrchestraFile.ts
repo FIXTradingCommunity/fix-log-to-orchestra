@@ -12,8 +12,10 @@ import { KeyedCollection } from "./KeyedCollection";
 import { xml } from "vkbeautify";
 import { File } from './enums';
 
+type DOMParserSupportedType = "application/xhtml+xml" | "application/xml" | "image/svg+xml" | "text/html" | "text/xml";
+
 export default class OrchestraFile {
-    static readonly MIME_TYPE: SupportedType = "application/xml";
+    static readonly MIME_TYPE: DOMParserSupportedType = "application/xml";
     static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra/repository";
 
     private repositoryStatistics = new KeyedCollection<number>();
@@ -48,7 +50,8 @@ export default class OrchestraFile {
     static serialize(document: Document): string {
         const serializer = new XMLSerializer();
         const text = serializer.serializeToString(document);
-        return xml(text, 2);
+        const parseText = text.replaceAll(/(issue="\w+[.*+\-?^${}()|[\]\\]\w+")|(supported="supported")/gi, "");
+        return xml(parseText, 2);
     }
     static getErrorMessage(textContent: string | null): string {
         if (!textContent) return "Error parsing XML";
