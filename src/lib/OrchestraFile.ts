@@ -47,10 +47,33 @@ export default class OrchestraFile {
             return doc;
         }
     }
+    static getRegex = () => {
+      const words = [
+        "issue",
+        "supported",
+        "added",
+        "addedEP",
+        "deprecated",
+        "deprecatedEP",
+        "lastModified",
+        "replaced",
+        "replacedEP",
+        "replacedByField",
+        "updated",
+        "updatedEP",
+        "latestEP",
+        'scenario="base"',
+        'presence="optional"'
+      ];
+      return new RegExp(words.map(word => 
+        word.includes("=")
+        ? word
+        : `${word}="[\\w+.*+-?^]+"`).join('|'), "gi")
+    }
     static serialize(document: Document): string {
         const serializer = new XMLSerializer();
         const text = serializer.serializeToString(document);
-        const parseText = text.replaceAll(/(issue="\w+[.*+\-?^${}()|[\]\\]\w+")|(supported="supported")/gi, "");
+        const parseText = text.replaceAll(this.getRegex(), "");
         return xml(parseText, 2);
     }
     static getErrorMessage(textContent: string | null): string {
