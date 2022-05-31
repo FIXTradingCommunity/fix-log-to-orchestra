@@ -47,8 +47,22 @@ export default class OrchestraFile {
             return doc;
         }
     }
-    static getRegex = () => {
-      const words = [
+
+    static removeDocumentNodes = (document: Document): void => {
+      const listElements = [
+        "fixr:categories",
+        "fixr:sections",
+      ]
+      listElements.forEach(e => {
+        const node = document.getElementsByTagName(e)[0];
+        if (node) {
+            node.remove();
+        }
+      })
+    }
+
+    static removeDocumentAttributes = (document: Document): void => {
+      const attributesList = [
         "issue",
         "supported",
         "added",
@@ -62,19 +76,26 @@ export default class OrchestraFile {
         "updated",
         "updatedEP",
         "latestEP",
-        'scenario="base"',
-        'presence="optional"'
+        "scenario='base'",
+        "presence='optional'"
       ];
-      return new RegExp(words.map(word => 
-        word.includes("=")
-        ? word
-        : `${word}="[\\w+.*+-?^]+"`).join('|'), "gi")
+      attributesList.forEach(attribute => {
+        const nodes = document.querySelectorAll(`[${attribute}]`);
+        const parseAttribute = attribute.split("=")[0];
+        if (nodes) {
+          nodes.forEach(node => {
+           node.removeAttribute(parseAttribute);
+          })
+        }
+      })
     }
+
     static serialize(document: Document): string {
+        this.removeDocumentNodes(document);
+        this.removeDocumentAttributes(document);
         const serializer = new XMLSerializer();
         const text = serializer.serializeToString(document);
-        const parseText = text.replaceAll(this.getRegex(), "");
-        return xml(parseText, 2);
+        return xml(text, 2);
     }
     static getErrorMessage(textContent: string | null): string {
         if (!textContent) return "Error parsing XML";
