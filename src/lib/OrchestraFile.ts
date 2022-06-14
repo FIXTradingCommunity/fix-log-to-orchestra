@@ -25,6 +25,7 @@ export default class OrchestraFile {
     private progressNode: HTMLElement | null;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
     private appendOnly: boolean;
+    private datatypes: string[] = [];
 
     constructor(file: File, appendOnly: boolean = false, progressNode: HTMLElement | null, progressFunc: (progressNode: HTMLElement, percent: number) => void) {
         this.file = file;
@@ -90,9 +91,15 @@ export default class OrchestraFile {
       })
     }
 
-    static serialize(document: Document): string {
+    static serialize(document: Document, datatypes: string[]): string {
         this.removeDocumentNodes(document);
         this.removeDocumentAttributes(document);
+        const datatypeNodes = Array.from(document.getElementsByTagName("fixr:datatype"));
+        datatypeNodes.forEach((node) => {
+          if(!datatypes.includes(node.getAttribute("name") as string)) {
+                node.remove();
+             }
+        })
         const serializer = new XMLSerializer();
         const text = serializer.serializeToString(document);
         return xml(text, 2);
@@ -179,8 +186,8 @@ export default class OrchestraFile {
 
     updateDomFromModel(logModel: LogModel, progressNode: HTMLElement | null, logSource: string): void {
         this.updateDomMetadata(logSource);
-        this.updateDomCodes(logModel.model.codesets);
         this.updateDomFields(logModel.model.fields);
+        this.updateDomCodes(logModel.model.codesets);
         this.addDomMessages(logModel.model.messages);
         this.addDomComponents(logModel.model.components);
         this.addDomGroups(logModel.model.groups);
@@ -378,9 +385,9 @@ export default class OrchestraFile {
         metadataElement.appendChild(titleElement);
     }
     contents(): Blob {
-        return new Blob([OrchestraFile.serialize(this.document)], { type: OrchestraFile.MIME_TYPE });
+        return new Blob([OrchestraFile.serialize(this.document, this.datatypes)], { type: OrchestraFile.MIME_TYPE });
     }
-    public populateOrchestraModelFromDom(orchestraModel: OrchestraModel) {
+    public populateOrchestraModelFromDom(orchestraModel: OrchestraModel) {      
         this.populateFieldsModelFromDom(orchestraModel.fields);
         this.populateCodesetsModelFromDom(orchestraModel.codesets);
         this.populateComponentsModelFromDom(orchestraModel.components);
@@ -643,8 +650,12 @@ export default class OrchestraFile {
                 codesetElement.setAttribute("type", codeset.type);
                 codesetsElement.appendChild(codesetElement);
             }
+            this.datatypes = this.datatypes.filter(datatype => datatype !== codeset.name)
             if (usedCodes.length > 0) {
                 countCodesetsUsed++;
+                if (!this.datatypes.includes(codeset.type)) {
+                  this.datatypes.push(codeset.type);
+                }
                 codesetElement.setAttribute("supported", "supported");
                 const codeElements: HTMLCollectionOf<Element> = codesetElement.getElementsByTagName("fixr:code");
                 let domCodeValues: string[] = [];
@@ -703,6 +714,7 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Codesets.Used",countCodesetsUsed);
         this.repositoryStatistics.Add("Codesets.Removed",countCodesetsRemoved);
         this.repositoryStatistics.Add("Codesets.Added",countCustomCodesets);
+        this.repositoryStatistics.Add("Datatypes.Used", this.datatypes.length);
     }
     private isUserDefined(field: FieldModel) : boolean {
         let tagNumber: number = +field.id;
@@ -747,6 +759,9 @@ export default class OrchestraFile {
                     countFieldsUserDefined++;
                 }
                 else {
+                  if (!this.datatypes.includes(field.datatype)) {
+                    this.datatypes.push(field.datatype);
+                  }
                     countFieldsUsed++;
                 }
             }

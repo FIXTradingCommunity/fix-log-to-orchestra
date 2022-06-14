@@ -130,7 +130,6 @@ export class CodesetsModel extends Map<string, CodesetModel> {
 
 }
 
-
 export class ComponentsModel extends StructureModelMap<ComponentModel> {
     private componentIdMap: Map<string, ComponentModel> = new Map();
 

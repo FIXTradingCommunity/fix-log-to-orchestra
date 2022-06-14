@@ -7,6 +7,7 @@ interface Props {
     codesets: number;
     components: number;
     fields: number;
+    datatypes: number;
     fixMessageTypes: number;
     messageScenarios: number;
     userDefinedFields: number;
@@ -22,6 +23,7 @@ const ProgressCircle: React.FC<Props> = (props) => {
   let codesets = 0;
   let components = 0;
   let fields = 0;
+  let datatypes = 0;
   let fixMessageTypes = 0;
   let messageScenarios = 0;
   let userDefinedFields = 0;
@@ -31,6 +33,7 @@ const ProgressCircle: React.FC<Props> = (props) => {
     codesets = results.codesets;
     components = results.components;
     fields = results.fields;
+    datatypes = results.datatypes;
     fixMessageTypes = results.fixMessageTypes;
     messageScenarios = results.messageScenarios;
     userDefinedFields = results.userDefinedFields;
@@ -55,6 +58,10 @@ const ProgressCircle: React.FC<Props> = (props) => {
         <div className="resultsValueContainer">
           <div className="resultsLabel"># standard fields discovered</div>
           <div className="resultsValue">{fields}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># datatypes discovered</div>
+          <div className="resultsValue">{datatypes}</div>
         </div>
         <div className="resultsValueContainer">
           <div className="resultsLabel"># user defined fields discovered</div>
