@@ -270,13 +270,17 @@ export default class App extends Component {
                 ))}
               </div>
               <div className="downloadButtonWrapper">
-                <button className={"submitButton downloadWarningsButton"} onClick={() => this.logWarnings.downloadWarnings()}>Download</button>
+                <button 
+                  className={"submitButton downloadWarningsButton"}
+                  onClick={() => this.logWarnings.downloadWarnings()}
+                >
+                  Download
+                </button>
               </div>
           </div>
         </>
       ) : <></>
   }
-
 
   private handleClearFields() {
     if (this.referenceFile) {
@@ -365,36 +369,21 @@ export default class App extends Component {
     }
   }
   private handleReaderFinish = (output: OrchestraFile, messagesCount: number) => {
-
-  //return the values from the statistics dictionary
-
-    const fixMessageTypes = output.statistics.Item("Messages.Added");
-
-    const messageScenarios = output.statistics.Item("Scenarios.Added");
-
-    const fields = output.statistics.Item("Fields.Used");
-
-    const userDefinedFields = output.statistics.Item("Fields.UserDefined");
-
-    const components = output.statistics.Item("Components.Used");
-
-    const codesets = output.statistics.Item("Codesets.Used");
-
-    // const componentScenarios = 0;  // Needs to be implemented
-
-
+    //return the values from the statistics dictionary
     this.setState({
       results: {
-        codesets,
-        components,
-        fields,
-        fixMessageTypes,
+        fixMessageTypes: output.statistics.Item("Messages.Added"),
+        messageScenarios: output.statistics.Item("Scenarios.Added"),
+        fields: output.statistics.Item("Fields.Used"),
+        datatypes: output.statistics.Item("Datatypes.Used"),
+        userDefinedFields: output.statistics.Item("Fields.UserDefined"),
+        components: output.statistics.Item("Components.Used"),
+        codesets: output.statistics.Item("Codesets.Used"),
         messagesCount,
-        messageScenarios,
-        userDefinedFields,
       }
     })
   }
+
   private openResults = () => {
     this.setState({
       showResults: true,
@@ -412,11 +401,29 @@ export default class App extends Component {
       showResults: false,
     });
     
-    if (this.referenceFile && this.logFiles && this.orchestraFileName && this.inputProgress && this.outputProgress &&
-      this.logProgress && this.configurationProgress) {
+    if (
+        this.referenceFile &&
+        this.logFiles &&
+        this.orchestraFileName &&
+        this.inputProgress &&
+        this.outputProgress &&
+        this.logProgress &&
+        this.configurationProgress
+    ) {
       this.setState({ showAlerts: false, creatingFile: true });
-      const runner: Log2Orchestra = new Log2Orchestra(this.referenceFile, this.logFiles, this.configurationFile, this.orchestraFileName, this.appendOnly,
-        this.inputProgress, this.outputProgress, this.logProgress, this.configurationProgress, this.showProgress);
+
+      const runner: Log2Orchestra = new Log2Orchestra(
+        this.referenceFile,
+        this.logFiles,
+        this.configurationFile,
+        this.orchestraFileName,
+        this.appendOnly,
+        this.inputProgress,
+        this.outputProgress,
+        this.logProgress,
+        this.configurationProgress,
+        this.showProgress
+      );
       try {
         runner.onFinish = this.handleReaderFinish;
 
