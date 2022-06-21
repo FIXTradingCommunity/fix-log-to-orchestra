@@ -139,7 +139,8 @@ export default class LogModel {
           return;
         }
         let parseState: ParseState = new ParseState();
-        for (let fieldInstance of messageInstance) {
+          for (let i = 0; i<messageInstance.length; i++) {
+            const fieldInstance = messageInstance[i];
             if (fieldInstance.tag.length > 0) {
                 // find this field in the existing message model or one of its nested components
                 let fieldContext: FieldContext | undefined = messageModel.findFieldRef(fieldInstance.tag);
@@ -149,9 +150,13 @@ export default class LogModel {
                     if (groupState && groupState.instance <= groupState.instances) {
                         // if not already in the group and group intance less than numInGroup, add it to the group
                         // todo: warn about unknown field at end of last group instance
-
-                        if (groupState.instance === groupState.instances) {
-                          this.logWarnings.logWarningsMessages("Location of UDF ambiguous (inside or outside of repeating group)");
+                        if (
+                          groupState.instance === groupState.instances &&
+                          parseInt(fieldInstance.tag) >= 5000 &&
+                          parseInt(fieldInstance.tag) <= 9999 &&
+                          parseInt(messageInstance[i+1].tag) !== 451
+                          ) {
+                          this.logWarnings.logWarningsMessages(`Location of UDF ${fieldInstance.tag} ambiguous (inside or outside of repeating group)`);
                         }
 
                         fieldContext = [newFieldRef, groupState.group, undefined];

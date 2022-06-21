@@ -21,8 +21,9 @@ export default class LogWarnings {
   public cleanWarnings = () => {
     this.warnings = {};
     this.fileName = "";
-    this.line = 0;
+    this.line = 1;
   }
+
   public getWarnings = () => {
     return this.warnings;
   }

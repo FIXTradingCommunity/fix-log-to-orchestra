@@ -142,6 +142,7 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
     private messageEndOffset: number = 0;
     private str: string = "";
     private logWarnings: LogWarnings = LogWarnings.getInstance();
+    private discoveredAlternativeDelimiter: boolean = false;
     public unprocessedMessages: number = 0;
     get lastMessageOffset(): number {
         return this.messageEndOffset;
@@ -159,15 +160,13 @@ export default class TVFileParser implements Iterator<TVMessageParser> {
         if (messageStartOffset !== -1) {
             const delimiterCharIndex = this.str.indexOf(TVFileParser.bodyLengthTag, messageStartOffset) - 1;
             // find the character before the second field, tag 9. It is the field delimiter in the log file.
-            if (messageStartOffset !== -1) {
                 this.fieldDelimiter = this.str.charAt(delimiterCharIndex);
-                if (this.fieldDelimiter !== String.fromCharCode(1)) {
-                  this.logWarnings.logWarningsMessages("discovered alternative field delimiter (SOH is the standard");
+                if (this.fieldDelimiter !== String.fromCharCode(1) && !this.discoveredAlternativeDelimiter) {
+                  this.discoveredAlternativeDelimiter = true;
+                  this.logWarnings.logWarningsMessages(`discovered alternative field delimiter "${this.fieldDelimiter}" (SOH is the standard)`);
                 }
                 TVFieldParser.fieldDelimiter = this.fieldDelimiter;
-            } else {
-                // default to SOH, but give warning
-            }
+           
             const checksumOffset: number = this.str.indexOf(TVFileParser.checksumTag, messageStartOffset);
             if (checksumOffset !== -1) {
                 this.messageEndOffset = this.str.indexOf(this.fieldDelimiter, checksumOffset);
