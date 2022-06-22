@@ -38,9 +38,9 @@ export default class LogReader {
     }
     async readFile(): Promise<void> {
         const logParser: TVFileParser = new TVFileParser();
+        this.logWarnings.setLine(1);
         let fileOffset: number = 0;
         let chunkSize: number = 64 * 1024;
-
         // continue while not eof and at least one message found per chunk
         let atLeastOneMessage: boolean = true;
         while (fileOffset < this.fileSize && atLeastOneMessage) {
