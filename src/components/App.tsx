@@ -27,7 +27,7 @@ const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/14760
 const currentYear = new Date().getFullYear();
 
 const splittedVersion = version.split('.');
-const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}`;
+const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}${splittedVersion[2] ? `.${splittedVersion[2]}` : ""}`;
 
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
