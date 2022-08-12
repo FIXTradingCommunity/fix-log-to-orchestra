@@ -25,6 +25,6 @@ export const readXMLfromURL = (file: GitStandardFile): any => new Promise((resol
 export const getFileList = (): any => new Promise((resolve, reject) => {
   fetch('https://api.github.com/repositories/89743776/contents/FIX%20Standard')
   .then(response => response.json())
-  .then(data => resolve(data))
+  .then(data => resolve(data.message ? [] : data))
   .catch(err => reject(err));
 })

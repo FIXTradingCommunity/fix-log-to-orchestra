@@ -11,6 +11,7 @@ import Dialog from '@material-ui/core/Dialog';
 import Button from '@material-ui/core/Button';
 import { blue } from '@material-ui/core/colors';
 import "./fileDialog.css";
+import { DialogContent } from '@material-ui/core';
 
 
 const useStyles = makeStyles({
@@ -26,11 +27,14 @@ export interface SimpleDialogProps {
   onClose: (value: string) => void;
   fixStandardFiles: any;
   handleCancel: any;
+  title: string;
+  buttonText: string;
+  errorMessage: string;
 }
 
 function SimpleDialog(props: SimpleDialogProps) {
   const classes = useStyles();
-  const { onClose, selectedValue, open, handleCancel, fixStandardFiles } = props; 
+  const { onClose, selectedValue, open, handleCancel, fixStandardFiles, title, buttonText, errorMessage } = props; 
   const handleClose = () => {
     onClose(selectedValue);
   };
@@ -42,9 +46,9 @@ function SimpleDialog(props: SimpleDialogProps) {
     
   return (
     <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
-      <DialogTitle id="simple-dialog-title">Select FIX Standard File</DialogTitle>
-      <List>
-        {fixStandardFiles && fixStandardFiles.map((file: any) => (
+      <DialogTitle id="simple-dialog-title">{title}</DialogTitle>
+      {fixStandardFiles && fixStandardFiles.length > 0 && (<List>
+        {fixStandardFiles.map((file: any) => (
           <ListItem button onClick={(e) => handleListItemClick(file, e)} key={file.name}>
             <ListItemAvatar>
               <Avatar className={classes.avatar}>
@@ -54,8 +58,11 @@ function SimpleDialog(props: SimpleDialogProps) {
             <ListItemText primary={file.name} />
           </ListItem>
         ))}
-      </List>
-      <Button onClick={handleCancel} variant="contained">Cancel</Button>
+      </List>)}
+      {(!fixStandardFiles || fixStandardFiles.length === 0) && (
+        <DialogContent>{errorMessage}</DialogContent>
+      )}
+      <Button onClick={handleCancel} variant="contained">{buttonText}</Button>
     </Dialog>
   );
 }
@@ -82,7 +89,24 @@ export default function SimpleDialogDemo(props: any) {
   return (
     <div onClick={handleClickOpen} className="chooseFileButton fixFileButton">
         FIX Standard
-      <SimpleDialog selectedValue={""} open={open} handleCancel={handleCancel} onClose={handleClose} fixStandardFiles={fixStandardFiles} />
+      <SimpleDialog 
+        selectedValue={""}
+        open={open}
+        handleCancel={handleCancel}
+        onClose={handleClose}
+        fixStandardFiles={fixStandardFiles}
+        title={
+          fixStandardFiles.length > 0 
+            ? "Select FIX Standard File"
+            : "Retrieval failed"
+        }
+        buttonText={
+          fixStandardFiles.length > 0 
+            ? "Cancel"
+            : "Ok"
+        }
+        errorMessage={"Access to GitHub failed, please choose a local file."}
+      />
     </div>
   );
 }

@@ -18,7 +18,7 @@ import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import ResultsPage from './ResultsPage/ResultsPage';
 import { File } from '../lib/enums';
-import { getFileList } from "./helper";
+import { getFileList } from "./helpers";
 import { GitStandardFile, IDecodedUserData, IDecoded, ErrorMsg } from "../types/types";
 import LogWarnings from '../lib/LogWarnings';
 
@@ -246,9 +246,13 @@ export default class App extends Component {
 
   public async componentDidMount() {
     this.CheckAuthenticated();
-    const data: GitStandardFile[] = await getFileList();
-    const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
-    this.setState({ fixStandardFiles: filteredData });
+    try {
+      const data: GitStandardFile[] = await getFileList();
+      const filteredData =  data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
+      this.setState({ fixStandardFiles: filteredData });
+    } catch (err) {
+      throw err;
+    }
   }
 
   private getWarnings = (warningsMessages: {[key: string]: object[]}) => {
