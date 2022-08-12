@@ -68,6 +68,7 @@ export default class OrchestraFile {
         "supported",
         "added",
         "addedEP",
+        "category",
         "deprecated",
         "deprecatedEP",
         "lastModified",
