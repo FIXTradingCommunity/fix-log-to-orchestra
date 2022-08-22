@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import ProgressCircle from "../ProgressCircle/ProgressCircle";
 import "./fileInput.css";
-import { readXMLfromURL } from "../helper";
+import { readXMLfromURL } from "../helpers";
 import FileDialog from '../FileDialog/FileDialog';
 import { GitStandardFile, FixStandardFile } from "../../types/types"
 
