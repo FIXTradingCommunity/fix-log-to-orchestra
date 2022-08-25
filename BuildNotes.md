@@ -32,6 +32,6 @@ Each environment has a separate build procedure because of different URLs and se
 
 Build with these npm scripts to produce a package suitable for deployment:
 
-`build:dev` for development
+npm run-script build:dev -- for development
 
-`build:prod` for production
+npm run-script build:prod  -- for production
