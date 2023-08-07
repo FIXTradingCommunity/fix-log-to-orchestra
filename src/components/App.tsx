@@ -248,7 +248,7 @@ export default class App extends Component {
     this.CheckAuthenticated();
     try {
       const data: GitStandardFile[] = await getFileList();
-      const filteredData =  data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
+      const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml" || !e.name.includes(".xml")));
       this.setState({ fixStandardFiles: filteredData });
     } catch (err) {
       throw err;
