@@ -1,0 +1,56 @@
+.fieldsButtonContainers {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.configFileFieldsButton {
+  position: relative;
+  bottom: -45px;
+  background: none;
+  align-self: center;
+  height: 36px;
+  width: 150px;
+  margin-bottom: 10px;
+  margin-top: 15px;
+  border: 2px solid #c7c7c7;
+  border-radius: 23px;
+  color: #009FE3;
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.chooseGenericFileButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font: normal normal normal 14px arial;
+  height: 28px;
+  padding: 0 30px;
+  background: #009FE3;
+  border-radius: 14px;
+  color: #FFF;
+  cursor: pointer;
+  border: 1px solid #009FE3;
+  margin: 5px 0;
+  width: 100%;
+}
+
+.disabledButton {
+  opacity: 0.3;
+}
+
+.chooseFileButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+  padding: 0 30px;
+  background: #009FE3;
+  border-radius: 14px;
+  color: #FFF;
+  cursor: pointer;
+}

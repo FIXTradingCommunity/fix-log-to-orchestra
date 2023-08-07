@@ -1,4 +1,4 @@
-import { GitStandardFile, FixStandardFile } from '../types/types';
+import { GitStandardFile, FixStandardFile } from './types';
 
 export const readXMLfromURL = (file: GitStandardFile): any => new Promise((resolve, reject) => {
   try {
