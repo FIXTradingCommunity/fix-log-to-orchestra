@@ -4,7 +4,6 @@
 
 import Checkbox from '@material-ui/core/Checkbox';
 import TextField from '@material-ui/core/TextField';
-import * as Sentry from '@sentry/browser';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
 import React, { Component } from 'react';
@@ -13,16 +12,15 @@ import logo from '../assets/FIXorchestraLogo.png';
 import Log2Orchestra from "../lib/log2orchestra";
 import OrchestraFile from "../lib/OrchestraFile";
 import Utility from '../lib/utility';
+import ErrorHandler from '../lib/ErrorHandler';
 import './app.css';
 import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import ResultsPage from './ResultsPage/ResultsPage';
 import { File } from '../lib/enums';
 import { getFileList } from "./helpers";
-import { GitStandardFile, IDecodedUserData, IDecoded, ErrorMsg } from "../types/types";
+import { GitStandardFile, IDecoded, ErrorMsg } from "../types/types";
 import LogWarnings from '../lib/LogWarnings';
-
-const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
 
 const currentYear = new Date().getFullYear();
 
@@ -58,10 +56,28 @@ export default class App extends Component {
   private configurationProgress: HTMLElement | undefined = undefined;
   private alertMsg: ErrorMsg = { title: "", message: "" };
   private logWarnings: LogWarnings = LogWarnings.getInstance();
+  private errorHandler: ErrorHandler | undefined = undefined;
 
   constructor(props: {}) {
     super(props)
-    Sentry.init({ dsn: SENTRY_DNS_KEY });
+    window.addEventListener("offline", (event: any) => {
+      this.setState({
+        showModal: true,
+        modalTitle: "Error Connection",
+        modalMessage: "There is no Internet connection",
+        activeCleanApp: false,
+      });
+    });
+    window.onunhandledrejection = (event: any) => {
+      this.errorHandler?.captureException(event)
+      this.setState({
+        showModal: true,
+        modalTitle: "Unhandled Rejection",
+        modalMessage: event?.reason ?? "",
+        activeCleanApp: false,
+      });;
+    };
+    this.errorHandler = ErrorHandler.getInstance();
   }
 
   public render() {
@@ -437,15 +453,13 @@ export default class App extends Component {
         if (this.outputProgress instanceof ProgressBar) {
           this.outputProgress.setProgress(0);
         }
-      } catch (error) {
-        if (error) {
-          Sentry.captureException(error);
-          
+      } catch (err) {
+          const error = err as {name: string, message: string}
+          this.errorHandler?.captureException(error);
           this.alertMsg = {
-            title: this.getErrorTitle(error.name),
-            message: this.setMessageError(error.message || error)
-          };
-        }
+            title: this.getErrorTitle(error?.name ?? ""),
+            message: this.setMessageError(error?.message ?? error)
+          }
         this.setState({ showAlerts: true, creatingFile: false });
       }
       this.setState({ warningsMessages: this.logWarnings.getWarnings()})
@@ -536,18 +550,6 @@ export default class App extends Component {
       if (!verified) {
         throw new Error("unauthenticated");
       }
-
-      const userData = (decoded as IDecodedUserData);
-      Sentry.configureScope((scope) => {
-        scope.setUser({
-          Employer: userData.Employer,
-          email: userData.email,
-          firstname: userData.firstname,
-          groups: userData.groups,
-          lastname: userData.lastname,
-          sub: userData.sub,
-        });
-      });
 
       this.setState({
         authVerified: true,
