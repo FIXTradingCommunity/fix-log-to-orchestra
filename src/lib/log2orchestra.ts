@@ -101,6 +101,8 @@ export default class Log2Orchestra {
                 const config = new ConfigurationFile(this.configurationFile, this.configProgress, this.progressFunc);
                 await config.readFile();
                 logModel.messageScenarioKeys = config.messageScenarioKeys;
+            } else {
+              logModel.messageScenarioKeys = ConfigurationFile.defaultKeys;
             }
             var totalMessages : number = 0;
             // read and parse one or more FIX logs 
