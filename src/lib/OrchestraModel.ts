@@ -119,7 +119,11 @@ export class MessagesModel extends StructureModelMap<MessageModel>{
      * @returns an array of MessageModel of the specified type, possibly empty
      */
     getByMsgType(msgType?: string): MessageModel[] {
-        return Array.from(this.values()).filter(m => m.msgType === msgType);
+        let altMsgType = "";
+        if (msgType?.startsWith("U")) {
+          altMsgType = msgType.slice(1);
+        }
+        return Array.from(this.values()).filter(m => !!altMsgType.length ? m.msgType === altMsgType : m.msgType === msgType);
     }
 }
 

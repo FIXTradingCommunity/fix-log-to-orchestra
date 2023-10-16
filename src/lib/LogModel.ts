@@ -136,10 +136,11 @@ export default class LogModel {
         }
         const messageModel: MessageModel | undefined = this.getMessageScenario(messageInstance);
         if (!messageModel) {
+          this.logWarnings.logWarningsMessages("messageModel undefined");
           return;
         }
         let parseState: ParseState = new ParseState();
-          for (let i = 0; i<messageInstance.length; i++) {
+          for (let i = 0; i < messageInstance.length; i++) {
             const fieldInstance = messageInstance[i];
             if (fieldInstance.tag.length > 0) {
                 // find this field in the existing message model or one of its nested components
@@ -235,7 +236,7 @@ export default class LogModel {
             let code: CodeModel | undefined = fieldRef.codeset.getByValue(fieldInstance.value);
             if (!code) {
                 // add a code not in reference model
-                code = new CodeModel(null, fieldInstance.value, fieldInstance.value, IsSupported.Supported);
+                code = new CodeModel(null, `Code${fieldInstance.value}`, fieldInstance.value, IsSupported.Supported);
                 fieldRef.codeset.add(code);
             }
             if (code) {
