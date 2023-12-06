@@ -386,7 +386,41 @@ export default class OrchestraFile {
         metadataElement.appendChild(titleElement);
     }
     contents(): Blob {
-        return new Blob([OrchestraFile.serialize(this.document, this.datatypes)], { type: OrchestraFile.MIME_TYPE });
+      const fields = this.document.getElementsByTagName("fixr:field");
+      
+      // Converts the list of elements into an array to be able to sort them
+      const fieldsArray = Array.from(fields);
+
+      // Sort elements by their "id" attribute
+      fieldsArray.sort(function(a, b) {
+          const idA = parseInt(a?.getAttribute("id") ?? "0");
+          const idB = parseInt(b?.getAttribute("id") ?? "0");
+          if (idA >= 5000 && idA <= 39999) {
+            if (idB >= 5000 && idB <= 39999) {
+                return idA - idB;
+            } else {
+                return 1; // Place elements in the range 5000-39999 at the end
+            }
+        } else {
+            if (idB >= 5000 && idB <= 39999) {
+                return -1; // Place elements in the range 5000-39999 at the end
+            } else {
+                return idA - idB;
+            }
+        }
+      });
+
+      // Create a new <fixr:fields> element and add the sorted elements
+      const sortedFieldsElement = this.document.createElement("fixr:fields");
+      fieldsArray.forEach(function(field) {
+          sortedFieldsElement.appendChild(field);
+      });
+
+      // Replaces the original <fixr:fields> element with the sorted elements
+      const parentElement = this.document.getElementsByTagName("fixr:fields")[0];
+      parentElement?.parentNode?.replaceChild(sortedFieldsElement, parentElement);
+
+      return new Blob([OrchestraFile.serialize(this.document, this.datatypes)], { type: OrchestraFile.MIME_TYPE });
     }
     public populateOrchestraModelFromDom(orchestraModel: OrchestraModel) {      
         this.populateFieldsModelFromDom(orchestraModel.fields);
@@ -407,7 +441,7 @@ export default class OrchestraFile {
                 const type: string | null = element.getAttribute("type");
                 const scenario: string = element.getAttribute("scenario") || "base";
                 if (id && name && type) {
-                    fieldsModel.add(new FieldModel(id, name, type, scenario));
+                  fieldsModel.add(new FieldModel(id, name, type, scenario));
                 }
             }
             element = iterator.iterateNext() as Element;
@@ -719,10 +753,7 @@ export default class OrchestraFile {
     }
     private isUserDefined(field: FieldModel) : boolean {
         let tagNumber: number = +field.id;
-        if ((tagNumber >= 5000 && tagNumber <= 9999) || (tagNumber >= 20000  && tagNumber <= 39999)) {
-            return true;
-        }
-        return false;
+        return (tagNumber >= 5000 && tagNumber <= 9999) || (tagNumber >= 20000  && tagNumber <= 39999)
     }
     private updateDomFields(fieldsModel: FieldsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);

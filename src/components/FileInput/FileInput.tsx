@@ -69,6 +69,7 @@ class FileInput extends Component<Props> {
                         <div className="inputContent">
                           <p className="inputText">Drag file to read or</p>
                           <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
+                          {/* TODO: change by StandardFilesButton start to use InputButton, take a look at Playlist app */}
                           {fixStandardFiles && <FileDialog fixStandardFiles={fixStandardFiles} fixOnClick={fixOnClick} />}
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}

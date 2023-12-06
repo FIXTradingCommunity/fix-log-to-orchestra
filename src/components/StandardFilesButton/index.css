@@ -1,0 +1,16 @@
+.chooseFileButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+  padding: 0 30px;
+  background: #009FE3;
+  border-radius: 14px;
+  color: #FFF;
+  cursor: pointer;
+  font: normal normal normal 14px arial;
+}
+
+.fixFileButton {
+  margin-top: 10px;
+}

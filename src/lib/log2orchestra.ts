@@ -102,7 +102,7 @@ export default class Log2Orchestra {
                 await config.readFile();
                 logModel.messageScenarioKeys = config.messageScenarioKeys;
             } else {
-                logModel.messageScenarioKeys = ConfigurationFile.defaultKeys;
+              logModel.messageScenarioKeys = ConfigurationFile.defaultKeys;
             }
             var totalMessages : number = 0;
             // read and parse one or more FIX logs 
