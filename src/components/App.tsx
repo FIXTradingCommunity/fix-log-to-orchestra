@@ -286,9 +286,10 @@ export default class App extends Component {
     );
   }
 
-/*! Remove Xecurify authentication
   public async componentDidMount() {
+/*! Remove Xecurify authentication
     this.CheckAuthenticated();
+*/
     try {
       const data: GitStandardFile[] = await getFileList();
       const filteredData =
