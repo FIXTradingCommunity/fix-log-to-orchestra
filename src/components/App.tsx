@@ -307,7 +307,6 @@ export default class App extends Component {
       throw err;
     }
   }
-*/
 
   private getWarnings = (warningsMessages: { [key: string]: object[] }) => {
     const logFileNames = Object.keys(warningsMessages);
