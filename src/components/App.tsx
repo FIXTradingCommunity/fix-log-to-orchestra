@@ -287,7 +287,7 @@ export default class App extends Component {
   }
 
   public async componentDidMount() {
-    this.CheckAuthenticated();
+//    this.CheckAuthenticated();
     try {
       const data: GitStandardFile[] = await getFileList();
       const filteredData =
@@ -574,12 +574,12 @@ export default class App extends Component {
   }
 
   private CheckAuthenticated() {
-/*    if (process.env.NODE_ENV === "development") { */
+    if (process.env.NODE_ENV === "development") {
       this.setState({
         authVerified: true,
       });
       return;
- /*   } */
+    }
 
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
