@@ -286,6 +286,7 @@ export default class App extends Component {
     );
   }
 
+/*! Remove Xecurify authentication
   public async componentDidMount() {
     this.CheckAuthenticated();
     try {
@@ -305,6 +306,7 @@ export default class App extends Component {
       throw err;
     }
   }
+*/
 
   private getWarnings = (warningsMessages: { [key: string]: object[] }) => {
     const logFileNames = Object.keys(warningsMessages);
