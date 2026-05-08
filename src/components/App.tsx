@@ -574,13 +574,12 @@ export default class App extends Component {
   }
 
   private CheckAuthenticated() {
-    if (1 = 1) {
 /*    if (process.env.NODE_ENV === "development") { */
       this.setState({
         authVerified: true,
       });
       return;
-    }
+ /*   } */
 
     const urlparsed = QueryString.parse(window.location.search);
     const id_token = urlparsed.id_token as string;
