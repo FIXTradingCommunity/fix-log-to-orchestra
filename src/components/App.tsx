@@ -287,7 +287,7 @@ export default class App extends Component {
   }
 
   public async componentDidMount() {
-/*    this.CheckAuthenticated(); */
+    this.CheckAuthenticated();
     try {
       const data: GitStandardFile[] = await getFileList();
       const filteredData =
@@ -574,7 +574,8 @@ export default class App extends Component {
   }
 
   private CheckAuthenticated() {
-    if (process.env.NODE_ENV === "development") {
+    if (1 = 1) {
+/*    if (process.env.NODE_ENV === "development") { */
       this.setState({
         authVerified: true,
       });
