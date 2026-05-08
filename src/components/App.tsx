@@ -287,7 +287,7 @@ export default class App extends Component {
   }
 
   public async componentDidMount() {
-    this.CheckAuthenticated();
+/*    this.CheckAuthenticated(); */
     try {
       const data: GitStandardFile[] = await getFileList();
       const filteredData =
